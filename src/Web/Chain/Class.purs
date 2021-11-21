@@ -1,17 +1,17 @@
--- | Type classes of convenience
+-- | Type classes of convenience.
 
 module Web.Chain.Class
-( class IsDocument
-, toDocument
-, class IsEventTarget
-, toEventTarget
-, class IsNode
-, toNode
+( class IsChildNode
+, class IsDocument
 , class IsElement
-, toElement
-, class IsChildNode
-, toChildNode
+, class IsEventTarget
+, class IsNode
 , class IsParentNode
+, toChildNode
+, toDocument
+, toElement
+, toEventTarget
+, toNode
 , toParentNode
 ) where
 
@@ -24,6 +24,7 @@ import Web.DOM.Element as E
 import Web.DOM.Node as N
 import Web.DOM.Text as T
 import Web.Event.EventTarget as ET
+import Web.HTML.HTMLButtonElement as HB
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
 import Web.HTML.HTMLInputElement as HI
@@ -41,6 +42,9 @@ class IsEventTarget et where
 
 instance IsEventTarget N.Node where
   toEventTarget = N.toEventTarget
+
+instance IsEventTarget HB.HTMLButtonElement where
+  toEventTarget = HB.toEventTarget
 
 instance IsEventTarget HD.HTMLDocument where
   toEventTarget = HD.toEventTarget
@@ -71,6 +75,9 @@ instance IsNode N.Node where
 instance IsNode D.Text where
   toNode = T.toNode
 
+instance IsNode HB.HTMLButtonElement where
+  toNode = HB.toNode
+
 instance IsNode HE.HTMLElement where
   toNode = HE.toNode
 
@@ -98,6 +105,9 @@ instance IsElement D.Element where
 
 class IsNode c <= IsChildNode c where
   toChildNode :: c -> D.ChildNode
+
+instance IsChildNode HB.HTMLButtonElement where
+  toChildNode = HB.toChildNode
 
 instance IsChildNode HI.HTMLInputElement where
   toChildNode = HI.toChildNode

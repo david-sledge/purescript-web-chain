@@ -1,4 +1,16 @@
-module Web.Chain.Event where
+-- | Chain functions related to events.
+module Web.Chain.Event
+( allOff
+, change
+, getAllListeners
+, newEvent
+, off
+, on
+, onChange
+, ready
+, trigger
+, typeOff
+) where
 
 import Prelude
 
@@ -12,18 +24,21 @@ import Web.Event.EventTarget (EventListener, EventTarget, addEventListener, disp
 import Web.HTML.HTMLDocument (HTMLDocument, readyState)
 import Web.HTML.HTMLDocument.ReadyState (ReadyState(..))
 
-data ListenerArgs = ListenerArgs
-  { listener :: EventListener
-  , eventType :: EventType
-  , someBooleanArg :: Boolean
-  }
-
+-- | Creates an event.
 foreign import newEvent :: EventType -> Effect Event
 foreign import registerListener :: forall a. a -> EventTarget -> Effect Unit
 foreign import unregisterListener :: forall a. EventType -> EventListener -> a -> (EventType -> EventListener -> a -> EventTarget -> Effect Unit) -> EventTarget -> Effect Unit
+
+-- | Gets all listeners tied to an event target. Each value returned is in the
+-- | form of a continuation that expects an function argument that takes four
+-- | arguments: event type, event listener, Boolean (indicating whether events
+-- | of this type will be dispatched to the registered listener before being
+-- | dispatched to any EventTarget beneath it in the DOM tree), and an event
+-- | target.
 foreign import getAllListeners :: EventTarget -> Effect (Array ((EventType -> EventListener -> Boolean -> EventTarget -> Effect Unit) -> Effect Unit))
 foreign import clearRegisteredListeners :: EventTarget -> Effect Unit
 
+-- | Attach an event handler function to the event target.
 on :: forall m et a. MonadEffect m => IsEventTarget et => String -> (Event -> Effect a) -> m et -> m et
 on typeStr listener mTarget = do
   obj <- mTarget
@@ -33,6 +48,20 @@ on typeStr listener mTarget = do
   liftEffect $ registerListener applyArgs target *> applyArgs addEventListener
   pure obj
 
+-- | Attach an event handler function to the event target when the target's value changes.
+onChange :: forall m et a. MonadEffect m => IsEventTarget et => (Event -> Effect a) -> m et -> m et
+onChange = on "change"
+
+-- | Attach an event handler function to the HTML document when the DOM is fully loaded.
+ready :: forall m a. MonadAsk HTMLDocument m => MonadEffect m => (Event -> Effect a) -> m HTMLDocument
+ready f = do
+  htmlDoc <- ask
+  state <- liftEffect $ readyState htmlDoc
+  case state of
+    Loading -> on "DOMContentLoaded" f <<< pure $ htmlDoc
+    _ -> (liftEffect <<< f =<< (liftEffect $ newEvent (EventType "DOMContentLoaded"))) *> pure htmlDoc
+
+-- | Removes an event handler function from an event target.
 off :: forall et a m. MonadEffect m => IsEventTarget et => String -> (Event -> Effect a) -> m et -> m et
 off typeStr listener mTarget = do
   obj <- mTarget
@@ -40,6 +69,7 @@ off typeStr listener mTarget = do
   let target = toEventTarget obj
   (liftEffect $ unregisterListener (EventType typeStr) listen false removeEventListener target) *> pure obj
 
+-- | Removes all event handler functions of the given type from an event target.
 typeOff :: forall et m. MonadEffect m => IsEventTarget et => String -> m et -> m et
 typeOff typeStr mTarget = do
   obj <- mTarget
@@ -56,6 +86,7 @@ typeOff typeStr mTarget = do
     ) listeners
   pure obj
 
+-- | Removes all event handler functions from an event target.
 allOff :: forall m et. IsEventTarget et => MonadEffect m => m et -> m et
 allOff mTarget = do
   obj <- mTarget
@@ -65,22 +96,13 @@ allOff mTarget = do
   liftEffect $ clearRegisteredListeners target
   pure obj
 
-onChange :: forall m et a. MonadEffect m => IsEventTarget et => (Event -> Effect a) -> m et -> m et
-onChange = on "change"
-
-ready :: forall m a. MonadAsk HTMLDocument m => MonadEffect m => (Event -> Effect a) -> m HTMLDocument
-ready f = do
-  htmlDoc <- ask
-  state <- liftEffect $ readyState htmlDoc
-  case state of
-    Loading -> on "DOMContentLoaded" f <<< pure $ htmlDoc
-    _ -> (liftEffect <<< f =<< (liftEffect $ newEvent (EventType "DOMContentLoaded"))) *> pure htmlDoc
-
+-- | Triggers the event handlers tied to the event type to the event target.
 trigger :: forall et m. IsEventTarget et => MonadEffect m => String -> m et -> m et
 trigger evtType target = do
   obj <- target
   event <- liftEffect <<< newEvent $ EventType evtType
   (liftEffect $ dispatchEvent event (toEventTarget obj)) *> pure obj
 
+-- | Triggers the change event handlers tied to the event target.
 change :: forall et m. IsEventTarget et => MonadEffect m => m et -> m et
 change = trigger "change"

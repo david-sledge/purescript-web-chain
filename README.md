@@ -1,3 +1,12 @@
+# Chain
+
+Chain is a library for DOM manipulation using chaining.
+
+## Example
+
+The example below can be found in `test`. Run `spago bundle-app` and open `test/index.html` in a browser to see it in action.
+
+```purescript
 module Main where
 
 import Prelude
@@ -47,3 +56,18 @@ main = do
         Just bodyElem -> init bodyElem *> pure unit
         _ -> pure unit
     ) doc) doc *> pure unit
+```
+
+```html
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Example</title>
+    <script src="../index.js"></script>
+  </head>
+  <body></body>
+
+</html>
+```
