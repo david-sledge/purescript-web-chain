@@ -10,10 +10,9 @@ When creating a new Spago project, you can use
 `spago init --no-comments` or `spago init -C`
 to generate this file without the comments in this block.
 -}
-{ name = "purescript-web-chain"
+{ name = "web-chain"
 , dependencies =
-  [ "console"
-  , "effect"
+  [ "effect"
   , "exceptions"
   , "foldable-traversable"
   , "lists"
@@ -28,7 +27,7 @@ to generate this file without the comments in this block.
   , "web-html"
   ]
 , packages = ./packages.dhall
-, sources = [ "src/**/*.purs", "test/**/*.purs" ]
+, sources = [ "src/**/*.purs" ]
 , license = "MIT"
 , repository = "https://github.com/david-sledge/purescript-web-chain"
 }
