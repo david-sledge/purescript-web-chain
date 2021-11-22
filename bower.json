@@ -1,5 +1,5 @@
 {
-    "name": "purescript-purescript-web-chain",
+    "name": "purescript-web-chain",
     "license": [
         "MIT"
     ],
@@ -14,7 +14,6 @@
         "output"
     ],
     "dependencies": {
-        "purescript-console": "^v5.0.0",
         "purescript-effect": "^v3.0.0",
         "purescript-exceptions": "^v5.0.0",
         "purescript-foldable-traversable": "^v5.0.1",
