@@ -17,4 +17,4 @@ import Web.Chain.Class
   , toNode
   , toParentNode
   )
-import Web.Chain.DOM (N(..))
+import Web.Chain.DOM (N)
