@@ -13,10 +13,13 @@ to generate this file without the comments in this block.
 { name = "web-chain"
 , dependencies =
   [ "effect"
+  , "either"
   , "exceptions"
   , "foldable-traversable"
+  , "integers"
   , "lists"
   , "maybe"
+  , "numbers"
   , "prelude"
   , "psci-support"
   , "transformers"

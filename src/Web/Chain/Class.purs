@@ -22,6 +22,7 @@ import Web.DOM as D
 import Web.DOM.ChildNode as C
 import Web.DOM.Element as E
 import Web.DOM.Node as N
+import Web.DOM.ParentNode as P
 import Web.DOM.Text as T
 import Web.Event.EventTarget as ET
 import Web.HTML.HTMLButtonElement as HB
@@ -30,7 +31,7 @@ import Web.HTML.HTMLElement as HE
 import Web.HTML.HTMLInputElement as HI
 
 class IsDocument d where
-  toDocument :: d -> D.Document
+  toDocument ∷ d → D.Document
 
 instance IsDocument HD.HTMLDocument where
   toDocument = HD.toDocument
@@ -38,7 +39,7 @@ instance IsDocument HD.HTMLDocument where
 
 
 class IsEventTarget et where
-  toEventTarget :: et -> ET.EventTarget
+  toEventTarget ∷ et → ET.EventTarget
 
 instance IsEventTarget N.Node where
   toEventTarget = N.toEventTarget
@@ -64,10 +65,13 @@ instance IsEventTarget HE.HTMLElement where
 instance IsEventTarget C.ChildNode where
   toEventTarget = unsafeCoerce
 
+instance IsEventTarget P.ParentNode where
+  toEventTarget = unsafeCoerce
+
 
 
 class IsEventTarget n <= IsNode n where
-  toNode :: n -> D.Node
+  toNode ∷ n → D.Node
 
 instance IsNode N.Node where
   toNode = identity
@@ -93,10 +97,13 @@ instance IsNode HD.HTMLDocument where
 instance IsNode C.ChildNode where
   toNode = unsafeCoerce
 
+instance IsNode P.ParentNode where
+  toNode = unsafeCoerce
+
 
 
 class IsNode e <= IsElement e where
-  toElement :: e -> D.Element
+  toElement ∷ e → D.Element
 
 instance IsElement D.Element where
   toElement = identity
@@ -104,7 +111,7 @@ instance IsElement D.Element where
 
 
 class IsNode c <= IsChildNode c where
-  toChildNode :: c -> D.ChildNode
+  toChildNode ∷ c → D.ChildNode
 
 instance IsChildNode HB.HTMLButtonElement where
   toChildNode = HB.toChildNode
@@ -124,10 +131,13 @@ instance IsChildNode C.ChildNode where
 
 
 class IsNode p <= IsParentNode p where
-  toParentNode :: p -> D.ParentNode
+  toParentNode ∷ p → D.ParentNode
 
 instance IsParentNode D.Element where
   toParentNode = E.toParentNode
 
 instance IsParentNode HE.HTMLElement where
   toParentNode = HE.toParentNode
+
+instance IsParentNode P.ParentNode where
+  toParentNode = identity

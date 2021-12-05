@@ -1,4 +1,7 @@
-module Data.Tuple.Util where
+module Data.Tuple.Util
+  ( (*&)
+  )
+  where
 
 import Data.Tuple (Tuple(..))
 

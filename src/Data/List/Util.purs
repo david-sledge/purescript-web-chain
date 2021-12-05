@@ -1,17 +1,24 @@
-module Data.List.Util where
+module Data.List.Util
+  ( (&:)
+  , (++)
+  , merge
+  , pair
+  , s
+  )
+  where
 
 import Data.List (singleton)
 import Data.List.Types (List(..), (:))
 
-s :: forall a. a -> List a
+s ∷ ∀ a. a → List a
 s = singleton
 
-pair :: forall a. a -> a -> List a
+pair ∷ ∀ a. a → a → List a
 pair x y = x : s y
 
 infixr 6 pair as &:
 
-merge :: forall a. List a -> List a -> List a
+merge ∷ ∀ a. List a → List a → List a
 merge (Cons x xs) ys = x : (merge xs ys)
 merge _ ys = ys
 

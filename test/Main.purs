@@ -8,42 +8,54 @@ import Data.Tuple.Util ((*&))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console (log)
-import Web.Chain.DOM (el, empty, nd, tx, (>+))
+import Web.Chain.DOM (el, eln, empty, nd, ndp, txn, (>+))
 import Web.Chain.Event (allOff, change, onChange, ready)
 import Web.Chain.HTML (button, textField, val)
 import Web.HTML (HTMLElement, window)
 import Web.HTML.HTMLDocument (HTMLDocument, body)
 import Web.HTML.Window (document)
 
-init :: forall m. MonadAsk HTMLDocument m => MonadEffect m => HTMLElement -> m Unit
+init ∷ ∀ m. MonadAsk HTMLDocument m ⇒ MonadEffect m ⇒ HTMLElement → m Unit
 init bodyElem = do
-  doc <- ask
-  nameField <- textField ""
-  welcomeMessageArea <- el "div" [] [nd $ tx "This should never be displayed because the change listener is immediately triggered below"]
-  [nd $ el "div" [("yes" *& "no")]
-    [ nd $ tx "Hello, World!"
-    , nd $ el "br" [] []
-    , nd $ tx "What's your name? "
+  doc ← ask
+  nameField ← textField ""
+  welcomeMessageArea ← el "div" [] [txn "This should never be displayed because nameField's change listener is immediately triggered below"]
+  {--
+  <div yes="no">
+    Hello, World!
+    <br/>
+    What's your name? <input type="text" value="" />
+    <div>Greetings!</div>
+    <button>Stop Greeting Me</button>
+  </div>
+  --}
+  [eln "div" [("yes" *& "no")]
+    [ txn "Hello, World!"
+    , eln "br" [] []
+    , txn "What's your name? "
     , nd $ pure nameField # onChange (const $ runReaderT (do
           let g = empty $ pure welcomeMessageArea
-          value <- val $ pure nameField
-          if value == ""
-            then [nd $ tx "Greetings!"] >+ g
-            else [nd <<< tx $ "Greetings, " <> value <> "!"] >+ g
+          value ← val $ pure nameField
+          [txn
+            ( if value == ""
+              then "Greetings!"
+              else "Greetings, " <> value <> "!"
+            )
+          ] >+ g
         ) doc) # change
-    , nd $ pure welcomeMessageArea
-    , nd $ button [nd $ tx "Stop Greeting Me"] (const $ runReaderT (allOff $ pure nameField) doc)
+    , ndp welcomeMessageArea
+    , nd $ button [txn "Stop Greeting Me"] (const $ runReaderT (allOff $ pure nameField) doc)
     ]
   ] >+ (pure bodyElem) *> pure unit
 
-main :: Effect Unit
+main ∷ Effect Unit
 main = do
-  doc <- window >>= document
+  doc ← window >>= document
   runReaderT (ready <<< const $ runReaderT
     ( do
       liftEffect $ log "Gettin' ready..."
-      mBodyElem <- liftEffect $ body doc
+      mBodyElem ← liftEffect $ body doc
       case mBodyElem of
-        Just bodyElem -> init bodyElem *> pure unit
-        _ -> pure unit
+        Just bodyElem → init bodyElem *> pure unit
+        _ → pure unit
     ) doc) doc *> pure unit
