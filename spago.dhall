@@ -21,7 +21,6 @@ to generate this file without the comments in this block.
   , "maybe"
   , "numbers"
   , "prelude"
-  , "transformers"
   , "tuples"
   , "unsafe-coerce"
   , "web-dom"

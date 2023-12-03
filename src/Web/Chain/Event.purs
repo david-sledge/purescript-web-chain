@@ -12,18 +12,17 @@ module Web.Chain.Event
   , onChange
   , onChangeM
   , onM
-  , ready
+  , onReady
+  , onReady_
   , trigger
   , triggerM
   , typeOff
   , typeOffM
-  , whenReady
   )
   where
 
 import Prelude
 
-import Control.Monad.Reader (class MonadAsk, ask)
 import Data.Foldable (traverse_)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
@@ -86,8 +85,8 @@ onChangeM = onM "change"
 
 -- | Attach an event handler function to the HTML document when the DOM is fully
 -- | loaded. The document is returned.
-whenReady :: ∀ m a. MonadEffect m ⇒ (Event → Effect a) → m HTMLDocument
-whenReady f = do
+onReady :: ∀ m a. MonadEffect m ⇒ (Event → Effect a) → m HTMLDocument
+onReady f = do
   htmlDoc <- liftEffect $ document =<< window
   state ← liftEffect $ readyState htmlDoc
   case state of
@@ -95,14 +94,9 @@ whenReady f = do
     _ → (liftEffect <<< f =<< (newEvent (EventType "DOMContentLoaded"))) *> pure htmlDoc
 
 -- | Attach an event handler function to the HTML document when the DOM is fully
--- | loaded. The document is returned.
-ready ∷ ∀ m a. MonadAsk HTMLDocument m ⇒ MonadEffect m ⇒ (Event → Effect a) → m HTMLDocument
-ready f = do
-  htmlDoc ← ask
-  state ← liftEffect $ readyState htmlDoc
-  case state of
-    Loading → on "DOMContentLoaded" f htmlDoc
-    _ → (liftEffect <<< f =<< (newEvent (EventType "DOMContentLoaded"))) *> pure htmlDoc
+-- | loaded.
+onReady_ :: ∀ m a. MonadEffect m ⇒ (Event → Effect a) → m Unit
+onReady_ f = onReady f *> pure unit
 
 -- | Removes an event handler function from an event target. The target is
 -- | returned.

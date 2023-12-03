@@ -2,7 +2,6 @@
 
 module Web.Chain.Class
 ( class IsChildNode
-, class IsDocument
 , class IsElement
 , class IsEventTarget
 , class IsNode
@@ -99,15 +98,12 @@ instance IsNode P.ParentNode where
 
 
 
-class IsNode d <= IsDocument d where
-  toDocument ∷ d → D.Document
-  createTextNode :: String -> d -> Effect Text
-  createElement :: String -> d -> Effect D.Element
-
-instance IsDocument HD.HTMLDocument where
-  toDocument = HD.toDocument
-  createTextNode text d = DO.createTextNode text $ toDocument d
-  createElement tagName d = DO.createElement tagName $ toDocument d
+toDocument ∷ HD.HTMLDocument → D.Document
+toDocument = HD.toDocument
+createTextNode ∷ String → HD.HTMLDocument → Effect Text
+createTextNode text d = DO.createTextNode text $ toDocument d
+createElement ∷ String → HD.HTMLDocument → Effect D.Element
+createElement tagName d = DO.createElement tagName $ toDocument d
 
 
 

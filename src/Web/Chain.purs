@@ -5,7 +5,6 @@ module Web.Chain
 
 import Web.Chain.Class
   ( class IsChildNode
-  , class IsDocument
   , class IsElement
   , class IsEventTarget
   , class IsNode
