@@ -16,7 +16,6 @@ module Web.Chain.HTML
 
 import Prelude
 
-import Control.Monad.Reader (class MonadAsk)
 import Data.Either (Either(..), either)
 import Data.Foldable (class Foldable, intercalate)
 import Data.Int (fromString, toNumber)
@@ -28,7 +27,7 @@ import Data.Tuple.Util ((*&))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain (class IsDocument, class IsElement)
+import Web.Chain (class IsElement)
 import Web.Chain.DOM (N, attrM, el, rmAttrM, setAttrsM)
 import Web.Chain.Event (onM)
 import Web.Event.Event (Event)
@@ -38,7 +37,7 @@ import Web.HTML.HTMLInputElement (value)
 import Web.HTML.HTMLInputElement as HI
 
 -- | Create a plain ol' input field of type text with a default value.
-textField ∷ ∀ m d. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ String → m HTMLInputElement
+textField ∷ ∀ m. MonadEffect m ⇒ String → m HTMLInputElement
 textField defaultValue = maybe
     (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"input\" val' did not produce an HTMLInputElement")
     pure <<<
@@ -120,7 +119,7 @@ valM ∷ ∀ m. MonadEffect m ⇒ m HTMLInputElement → m String
 valM = (=<<) val
 
 -- | Create a button.
-button ∷ ∀ d f m a. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ Foldable f ⇒ f (N m) → (Event → Effect a) → m HTMLButtonElement
+button ∷ ∀ f m a. MonadEffect m ⇒ Foldable f ⇒ f (N m) → (Event → Effect a) → m HTMLButtonElement
 button childNodesM click = do
   element ← el "button" Nil childNodesM # onM "click" click
   maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"button\" click' did not produce an HTMLButtonElement") (pure) $ HB.fromElement element

@@ -17,6 +17,7 @@ module Web.Chain.Event
   , triggerM
   , typeOff
   , typeOffM
+  , whenReady
   )
   where
 
@@ -29,8 +30,10 @@ import Effect.Class (class MonadEffect, liftEffect)
 import Web.Chain.Class (class IsEventTarget, toEventTarget)
 import Web.Event.Event (Event, EventType(..))
 import Web.Event.EventTarget (EventListener, EventTarget, addEventListener, dispatchEvent, eventListener, removeEventListener)
+import Web.HTML (window)
 import Web.HTML.HTMLDocument (HTMLDocument, readyState)
 import Web.HTML.HTMLDocument.ReadyState (ReadyState(..))
+import Web.HTML.Window (document)
 
 -- | Creates an event.
 foreign import _newEvent ∷ EventType → Effect Event
@@ -80,6 +83,16 @@ onChange = on "change"
 -- | value changes. The target is returned.
 onChangeM ∷ ∀ m et a. MonadEffect m ⇒ IsEventTarget et ⇒ (Event → Effect a) → m et → m et
 onChangeM = onM "change"
+
+-- | Attach an event handler function to the HTML document when the DOM is fully
+-- | loaded. The document is returned.
+whenReady :: ∀ m a. MonadEffect m ⇒ (Event → Effect a) → m HTMLDocument
+whenReady f = do
+  htmlDoc <- liftEffect $ document =<< window
+  state ← liftEffect $ readyState htmlDoc
+  case state of
+    Loading → on "DOMContentLoaded" f htmlDoc
+    _ → (liftEffect <<< f =<< (newEvent (EventType "DOMContentLoaded"))) *> pure htmlDoc
 
 -- | Attach an event handler function to the HTML document when the DOM is fully
 -- | loaded. The document is returned.

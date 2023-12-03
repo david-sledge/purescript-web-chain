@@ -7,6 +7,8 @@ module Web.Chain.Class
 , class IsEventTarget
 , class IsNode
 , class IsParentNode
+, createElement
+, createTextNode
 , toChildNode
 , toDocument
 , toElement
@@ -17,9 +19,12 @@ module Web.Chain.Class
 
 import Prelude
 
+import Effect (Effect)
 import Unsafe.Coerce (unsafeCoerce)
+import Web.DOM (Text)
 import Web.DOM as D
 import Web.DOM.ChildNode as C
+import Web.DOM.Document as DO
 import Web.DOM.Element as E
 import Web.DOM.Node as N
 import Web.DOM.ParentNode as P
@@ -96,9 +101,13 @@ instance IsNode P.ParentNode where
 
 class IsNode d <= IsDocument d where
   toDocument ∷ d → D.Document
+  createTextNode :: String -> d -> Effect Text
+  createElement :: String -> d -> Effect D.Element
 
 instance IsDocument HD.HTMLDocument where
   toDocument = HD.toDocument
+  createTextNode text d = DO.createTextNode text $ toDocument d
+  createElement tagName d = DO.createElement tagName $ toDocument d
 
 
 

@@ -14,6 +14,7 @@ module Web.Chain.DOM
   , attrM
   , detach
   , detachM
+  , doc
   , el
   , eln
   , empty
@@ -33,20 +34,21 @@ module Web.Chain.DOM
 
 import Prelude
 
-import Control.Monad.Reader (class MonadAsk, asks)
 import Data.Foldable (class Foldable, traverse_)
 import Data.Maybe (Maybe, maybe)
 import Data.Tuple (Tuple(..))
 import Effect.Class (class MonadEffect, liftEffect)
 import Unsafe.Coerce (unsafeCoerce)
-import Web.Chain.Class (class IsChildNode, class IsDocument, class IsElement, class IsParentNode, toChildNode, toDocument, toElement, toNode)
+import Web.Chain.Class (class IsChildNode, class IsElement, class IsParentNode, createElement, createTextNode, toChildNode, toElement, toNode)
 import Web.Chain.Event (allOff)
+import Web.DOM (Element)
 import Web.DOM as D
 import Web.DOM.ChildNode as C
-import Web.DOM.Document (createElement, createTextNode)
 import Web.DOM.Element (getAttribute, removeAttribute, setAttribute)
 import Web.DOM.Node (appendChild, firstChild)
 import Web.DOM.ParentNode as P
+import Web.HTML (HTMLDocument, window)
+import Web.HTML.Window (document)
 
 -- | Heterogeneous continuation element type for child nodes.
 -- |
@@ -70,12 +72,15 @@ runN ∷ ∀ r m.
   r
 runN (N f) = f
 
+doc ∷ ∀ m. MonadEffect m ⇒ m HTMLDocument
+doc = liftEffect $ document =<< window
+
 -- | Creates a text node from a `String`.
-tx ∷ ∀ m d. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ String → m D.Text
-tx string = liftEffect <<< createTextNode string =<< asks toDocument
+tx ∷ ∀ m. MonadEffect m ⇒ String → m D.Text
+tx string = liftEffect $ createTextNode string =<< doc
 
 -- | Calls `tx` and applies the result to `nd`: `nd <<< tx`.
-txn ∷ ∀ m d. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ String → N m
+txn ∷ ∀ m. MonadEffect m ⇒ String → N m
 txn = nd <<< tx
 
 -- | Extracts child nodes from a `Foldable` of continuations and appends them to
@@ -187,11 +192,12 @@ rmAttrM ∷ ∀ m e. MonadEffect m ⇒ IsElement e ⇒ String → m e → m e
 rmAttrM = (=<<) <<< rmAttr
 
 -- | Creates an element, set attributes, and appends child nodes.
-el ∷ ∀ m d f1 f2. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → m D.Element
+el ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → m Element
 el tagName attributes children = do
-  elem ← asks $ liftEffect <<< createElement tagName <<< toDocument
-  (setAttrsM attributes elem) # appendNodesM children
+  elem <- liftEffect $ createElement tagName =<< doc
+  (setAttrs attributes elem) # appendNodesM children
 
--- | Calls `el` and applies the result to `nd`: `nd <<< el tagName attributes`.
-eln ∷ ∀ m d f1 f2. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → N m
+-- -- | Calls `el` and applies the result to `nd`: `nd <<< el tagName attributes`.
+-- eln ∷ ∀ m d f1 f2. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → N m
+eln ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → N m
 eln = (<<<) ((<<<) nd) <<< el
