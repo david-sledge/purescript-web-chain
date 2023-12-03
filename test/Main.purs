@@ -1,19 +1,25 @@
-module Main where
+module Main
+  ( main
+  )
+  where
 
 import Prelude
 
 import Control.Monad.Reader (class MonadAsk, ask, runReaderT)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (maybe)
 import Data.Tuple.Util ((*&))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Console (log)
-import Web.Chain.DOM (el, eln, empty, nd, ndp, txn, (>+))
-import Web.Chain.Event (allOff, change, onChange, ready)
+import Web.Chain.DOM (el, eln, empty, nd, ndp, txn, (+<<), (+<))
+import Web.Chain.Event (allOff, changeM, onChange, ready)
 import Web.Chain.HTML (button, textField, val)
 import Web.HTML (HTMLElement, window)
 import Web.HTML.HTMLDocument (HTMLDocument, body)
 import Web.HTML.Window (document)
+
+pu ∷ ∀ f. Applicative f ⇒ f Unit
+pu = pure unit
 
 init ∷ ∀ m. MonadAsk HTMLDocument m ⇒ MonadEffect m ⇒ HTMLElement → m Unit
 init bodyElem = do
@@ -29,24 +35,23 @@ init bodyElem = do
     <button>Stop Greeting Me</button>
   </div>
   --}
-  [eln "div" [("yes" *& "no")]
-    [ txn "Hello, World!"
-    , eln "br" [] []
-    , txn "What's your name? "
-    , nd $ pure nameField # onChange (const $ runReaderT (do
-          let g = empty $ pure welcomeMessageArea
-          value ← val $ pure nameField
-          [txn
+  _ <- bodyElem +< [
+    eln "div" [("yes" *& "no")] [
+      txn "Hello, World!",
+      eln "br" [] [],
+      txn "What's your name? ",
+      nd $ nameField # onChange (const $ runReaderT (do
+          value ← val nameField
+          empty welcomeMessageArea +<< [txn
             ( if value == ""
               then "Greetings!"
               else "Greetings, " <> value <> "!"
             )
-          ] >+ g
-        ) doc) # change
-    , ndp welcomeMessageArea
-    , nd $ button [txn "Stop Greeting Me"] (const $ runReaderT (allOff $ pure nameField) doc)
-    ]
-  ] >+ (pure bodyElem) *> pure unit
+          ]
+        ) doc) # changeM,
+      ndp welcomeMessageArea,
+      nd $ button [txn "Stop Greeting Me"] (const $ runReaderT (allOff nameField) doc)]]
+  pu
 
 main ∷ Effect Unit
 main = do
@@ -54,8 +59,5 @@ main = do
   runReaderT (ready <<< const $ runReaderT
     ( do
       liftEffect $ log "Gettin' ready..."
-      mBodyElem ← liftEffect $ body doc
-      case mBodyElem of
-        Just bodyElem → init bodyElem *> pure unit
-        _ → pure unit
-    ) doc) doc *> pure unit
+      maybe pu (\ bodyElem → init bodyElem *> pu) =<< (liftEffect $ body doc)
+    ) doc) doc *> pu

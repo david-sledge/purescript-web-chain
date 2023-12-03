@@ -4,7 +4,7 @@ pkgs.mkShell {
   buildInputs = (with pkgs; [
     spago
     pulp
-    nodejs-14_x
+    nodejs
     nodePackages.bower
     purescript
   ]);

@@ -30,14 +30,6 @@ import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
 import Web.HTML.HTMLInputElement as HI
 
-class IsDocument d where
-  toDocument ∷ d → D.Document
-
-instance IsDocument HD.HTMLDocument where
-  toDocument = HD.toDocument
-
-
-
 class IsEventTarget et where
   toEventTarget ∷ et → ET.EventTarget
 
@@ -99,6 +91,14 @@ instance IsNode C.ChildNode where
 
 instance IsNode P.ParentNode where
   toNode = unsafeCoerce
+
+
+
+class IsNode d <= IsDocument d where
+  toDocument ∷ d → D.Document
+
+instance IsDocument HD.HTMLDocument where
+  toDocument = HD.toDocument
 
 
 

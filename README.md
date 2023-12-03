@@ -4,9 +4,12 @@ Chain is a library for DOM manipulation using chaining.
 
 ## Example
 
-The example below can be found in `test`. Run `nix-shell --run "spago -x test.dhall bundle-app"` and open `test/index.html` in a browser to see it in action.
+The example below can be found in `test`. Run `spago -x test.dhall bundle-app` and open `test/index.html` in a browser to see it in action.
 
 ```purescript
+pu ∷ ∀ f. Applicative f ⇒ f Unit
+pu = pure unit
+
 init ∷ ∀ m. MonadAsk HTMLDocument m ⇒ MonadEffect m ⇒ HTMLElement → m Unit
 init bodyElem = do
   doc ← ask
@@ -21,24 +24,23 @@ init bodyElem = do
     <button>Stop Greeting Me</button>
   </div>
   --}
-  [eln "div" [("yes" *& "no")]
-    [ txn "Hello, World!"
-    , eln "br" [] []
-    , txn "What's your name? "
-    , nd $ pure nameField # onChange (const $ runReaderT (do
-          let g = empty $ pure welcomeMessageArea
-          value ← val $ pure nameField
-          [txn
+  _ <- bodyElem +< [
+    eln "div" [("yes" *& "no")] [
+      txn "Hello, World!",
+      eln "br" [] [],
+      txn "What's your name? ",
+      nd $ nameField # onChange (const $ runReaderT (do
+          value ← val nameField
+          empty welcomeMessageArea +<< [txn
             ( if value == ""
               then "Greetings!"
               else "Greetings, " <> value <> "!"
             )
-          ] >+ g
-        ) doc) # change
-    , ndp welcomeMessageArea
-    , nd $ button [txn "Stop Greeting Me"] (const $ runReaderT (allOff $ pure nameField) doc)
-    ]
-  ] >+ (pure bodyElem) *> pure unit
+          ]
+        ) doc) # changeM,
+      ndp welcomeMessageArea,
+      nd $ button [txn "Stop Greeting Me"] (const $ runReaderT (allOff nameField) doc)]]
+  pu
 
 main ∷ Effect Unit
 main = do
@@ -46,11 +48,8 @@ main = do
   runReaderT (ready <<< const $ runReaderT
     ( do
       liftEffect $ log "Gettin' ready..."
-      mBodyElem ← liftEffect $ body doc
-      case mBodyElem of
-        Just bodyElem → init bodyElem *> pure unit
-        _ → pure unit
-    ) doc) doc *> pure unit
+      maybe pu (\ bodyElem → init bodyElem *> pu) =<< (liftEffect $ body doc)
+    ) doc) doc *> pu
 ```
 
 ```html
