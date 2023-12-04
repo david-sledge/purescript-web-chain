@@ -8,7 +8,7 @@ The example below can be found in `test`. Run `spago -x test.dhall bundle-app` a
 
 ```purescript
 main ∷ ∀ m. MonadEffect m ⇒ m Unit
-main = onReady_ $ \ _ -> do
+main = onReady_ $ \ _ → do
   liftEffect $ log "Getting ready..."
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
@@ -26,7 +26,7 @@ main = onReady_ $ \ _ -> do
         </div>
       </body>
       --}
-      _ <- bodyElem +< [
+      _ ← bodyElem +< [
         eln "div" [("yes" *& "no")] [
           txn "Hello, World!",
           eln "br" [] [],

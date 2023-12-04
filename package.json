@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "scripts": {
+    "clean": "rimraf output && rimraf .spago",
+    "postinstall": "spago install",
+    "build": "spago build --purs-args '--censor-lib --strict'",
+    "build-test": "spago -x test.dhall bundle-app --to test-dist/index.js --purs-args '--censor-lib --strict' && cp test-dist/index.html test-dist/",
+    "format": "purs-tidy format-in-place src test examples",
+    "check-formatting": "purs-tidy check src test examples",
+    "example-all": "./build-examples.sh",
+    "example-b4-unload-event": "spago -x examples/b4-unload-event/spago.dhall bundle-app --main Main --to examples/b4-unload-event/dist/index.js && cp examples/b4-unload-event/html/index.html examples/b4-unload-event/dist/"
+  },
+  "devDependencies": {
+    "esbuild": "^0.14.38",
+    "purescript-psa": "^0.8.2",
+    "purs-tidy": "^0.7.2",
+    "rimraf": "^3.0.2",
+    "spago": "0.21.0"
+  }
+}

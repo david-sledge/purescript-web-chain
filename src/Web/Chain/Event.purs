@@ -85,9 +85,9 @@ onChangeM = onM "change"
 
 -- | Attach an event handler function to the HTML document when the DOM is fully
 -- | loaded. The document is returned.
-onReady :: ∀ m a. MonadEffect m ⇒ (Event → Effect a) → m HTMLDocument
+onReady ∷ ∀ m a. MonadEffect m ⇒ (Event → Effect a) → m HTMLDocument
 onReady f = do
-  htmlDoc <- liftEffect $ document =<< window
+  htmlDoc ← liftEffect $ document =<< window
   state ← liftEffect $ readyState htmlDoc
   case state of
     Loading → on "DOMContentLoaded" f htmlDoc
@@ -95,7 +95,7 @@ onReady f = do
 
 -- | Attach an event handler function to the HTML document when the DOM is fully
 -- | loaded.
-onReady_ :: ∀ m a. MonadEffect m ⇒ (Event → Effect a) → m Unit
+onReady_ ∷ ∀ m a. MonadEffect m ⇒ (Event → Effect a) → m Unit
 onReady_ f = onReady f *> pure unit
 
 -- | Removes an event handler function from an event target. The target is
@@ -154,7 +154,7 @@ allOffM = (=<<) allOff
 trigger ∷ ∀ et m. IsEventTarget et ⇒ MonadEffect m ⇒ String → et → m et
 trigger evtType target = do
   event ← newEvent $ EventType evtType
-  _ <- liftEffect $ dispatchEvent event (toEventTarget target)
+  _ ← liftEffect $ dispatchEvent event (toEventTarget target)
   pure target
 
 -- | Triggers the event handlers tied to the event type to the event target. The

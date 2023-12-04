@@ -135,7 +135,7 @@ detachM = (=<<) detach
 -- | `Web.Chain.Event.ready`. The removed node is returned.
 remove ∷ ∀ c m. MonadEffect m ⇒ IsChildNode c ⇒ c → m c
 remove childNode = do
-  _ <- empty (unsafeCoerce childNode :: P.ParentNode)
+  _ ← empty (unsafeCoerce childNode ∷ P.ParentNode)
   detachM $ allOff childNode
 
 -- | Calls `remove` on the all of the node's children. The emptied node is
@@ -194,7 +194,7 @@ rmAttrM = (=<<) <<< rmAttr
 -- | Creates an element, set attributes, and appends child nodes.
 el ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → m Element
 el tagName attributes children = do
-  elem <- liftEffect $ createElement tagName =<< doc
+  elem ← liftEffect $ createElement tagName =<< doc
   (setAttrs attributes elem) # appendNodesM children
 
 -- -- | Calls `el` and applies the result to `nd`: `nd <<< el tagName attributes`.

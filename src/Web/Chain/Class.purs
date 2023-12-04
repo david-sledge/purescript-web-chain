@@ -29,6 +29,7 @@ import Web.DOM.Node as N
 import Web.DOM.ParentNode as P
 import Web.DOM.Text as T
 import Web.Event.EventTarget as ET
+import Web.HTML (Window)
 import Web.HTML.HTMLButtonElement as HB
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
@@ -62,6 +63,9 @@ instance IsEventTarget C.ChildNode where
   toEventTarget = unsafeCoerce
 
 instance IsEventTarget P.ParentNode where
+  toEventTarget = unsafeCoerce
+
+instance IsEventTarget Window where
   toEventTarget = unsafeCoerce
 
 

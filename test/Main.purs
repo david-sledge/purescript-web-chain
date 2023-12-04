@@ -7,7 +7,8 @@ import Prelude
 
 import Data.Maybe (maybe)
 import Data.Tuple.Util ((*&))
-import Effect.Class (class MonadEffect, liftEffect)
+import Effect (Effect)
+import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Exception (error, throwException)
 import Web.Chain.DOM (doc, el, eln, empty, nd, ndp, txn, (+<), (+<<))
@@ -15,8 +16,8 @@ import Web.Chain.Event (allOff, changeM, onChange, onReady_)
 import Web.Chain.HTML (button, textField, val)
 import Web.HTML.HTMLDocument (body)
 
-main ∷ ∀ m. MonadEffect m ⇒ m Unit
-main = onReady_ $ \ _ -> do
+main ∷ Effect Unit
+main = onReady_ $ \ _ → do
   liftEffect $ log "Getting ready..."
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
@@ -34,7 +35,7 @@ main = onReady_ $ \ _ -> do
         </div>
       </body>
       --}
-      _ <- bodyElem +< [
+      _ ← bodyElem +< [
         eln "div" [("yes" *& "no")] [
           txn "Hello, World!",
           eln "br" [] [],
@@ -49,5 +50,5 @@ main = onReady_ $ \ _ -> do
               ]
             ) # changeM,
           ndp welcomeMessageArea,
-          nd $ button [txn "Stop Greeting Me"] (const $ allOff nameField)]]
+          nd $ button [txn "Stop Greeting Me"] (const $ allOff nameField *> empty welcomeMessageArea)]]
       pure unit)
