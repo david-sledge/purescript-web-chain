@@ -1,8 +1,7 @@
 module Data.Tuple.Util
   ( (*&)
-  )
-  where
+  ) where
 
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(Tuple))
 
 infix 0 Tuple as *&
