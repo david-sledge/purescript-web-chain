@@ -10,7 +10,7 @@ import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (doc, el, eln, nd, ndp, txn, (+<))
+import Web.Chain.DOM (doc, el, eln, nd, ndM, txn, (+<))
 import Web.Chain.Event (onReady_)
 import Web.Chain.HTML (button)
 import Web.HTML.HTMLDialogElement (HTMLDialogElement, fromElement, open, showModal)
@@ -47,7 +47,7 @@ main = onReady_ $ \_ →
           ]
         dialog <- maybe (liftEffect <<< throwException $ error "Issue with dialog") pure mDialog
         _ ← bodyElem +<
-          [ ndp dialog
+          [ ndM dialog
           , eln "div" []
               [ nd $ button [ txn "Update details" ]
                   ( const $ do

@@ -40,7 +40,7 @@ main = onReady_ $ \ _ → do
                 )
               ]
             ) # changeM,
-          ndp welcomeMessageArea,
+          ndM welcomeMessageArea,
           nd $ button [txn "Stop Greeting Me"] (const $ allOff nameField)]]
       pure unit)
 ```

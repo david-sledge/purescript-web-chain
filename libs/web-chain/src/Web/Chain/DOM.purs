@@ -5,7 +5,6 @@ module Web.Chain.DOM
   , (+<<)
   , (>+)
   , (>>+)
-  , N
   , appendNodes
   , appendNodesM
   , appendsNodes
@@ -20,7 +19,7 @@ module Web.Chain.DOM
   , empty
   , emptyM
   , nd
-  , ndp
+  , ndM
   , remove
   , removeM
   , rmAttr
@@ -37,7 +36,7 @@ import Data.Foldable (class Foldable, traverse_)
 import Data.Maybe (Maybe, maybe)
 import Data.Tuple (Tuple(Tuple))
 import Effect.Class (class MonadEffect, liftEffect)
-import Web.DOM (Element, Text)
+import Web.DOM (Element, Node, Text)
 import Web.DOM.Class.DocumentOp (createElement, createTextNode)
 import Web.DOM.Class.ElementOp (class ElementOp, getAttribute, removeAttribute, setAttribute)
 import Web.DOM.Class.NodeOp (class NodeOp, appendChild, firstChild, parentNode, removeChild, toNode)
@@ -45,28 +44,12 @@ import Web.Event.Class.EventTargetOp (allOff)
 import Web.HTML (HTMLDocument, window)
 import Web.HTML.Window (document)
 
--- | Heterogeneous continuation element type for child nodes.
--- |
--- | This type is used to pass a `Foldable` of heterogeneous data types where
--- | all types are instances of `NodeOp` typically for the purpose of
--- | appending to an instance of another `NodeOp`.
-newtype N m =
-  N (∀ r. (∀ n. NodeOp n ⇒ m n → r) → r)
-
 -- | Put an instance of a `NodeOp` in a continuation.
-nd ∷ ∀ n m. NodeOp n ⇒ m n → N m
-nd mn = N \f → f mn
+nd ∷ ∀ n m. Functor m => NodeOp n ⇒ m n → m Node
+nd mn = toNode <$> mn
 
-ndp ∷ ∀ n m. NodeOp n ⇒ Applicative m ⇒ n → N m
-ndp = nd <<< pure
-
--- | Applies a function to a continuation and returns the result.
-runN
-  ∷ ∀ r m
-  . N m
-  → (∀ n. NodeOp n ⇒ m n → r)
-  → r
-runN (N f) = f
+ndM ∷ ∀ n m. NodeOp n ⇒ Applicative m ⇒ n → m Node
+ndM = nd <<< pure
 
 doc ∷ ∀ m. MonadEffect m ⇒ m HTMLDocument
 doc = liftEffect $ document =<< window
@@ -76,35 +59,31 @@ tx ∷ ∀ m. MonadEffect m ⇒ String → m Text
 tx string = createTextNode string =<< doc
 
 -- | Calls `tx` and applies the result to `nd`: `nd <<< tx`.
-txn ∷ ∀ m. MonadEffect m ⇒ String → N m
+txn ∷ ∀ m. MonadEffect m ⇒ String → m Node
 txn = nd <<< tx
 
 -- | Extracts child nodes from a `Foldable` of continuations and appends them to
 -- | a parent node. Returns the given parent node.
---appendNodes ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ f (N m) → p → m p
-appendNodes ∷ ∀ m p f. Foldable f ⇒ MonadEffect m ⇒ NodeOp p ⇒ f (N m) → p → m p
+appendNodes ∷ ∀ m p f. Foldable f ⇒ MonadEffect m ⇒ NodeOp p ⇒ f (m Node) → p → m p
 appendNodes childrenM parent = do
-  traverse_
-    ( \mChild → runN mChild (map toNode) >>= flip appendChild parent
-    )
-    childrenM
+  traverse_ ((=<<) (flip appendChild parent)) childrenM
   pure parent
 
 infix 9 appendNodes as >+
 
-appendsNodes ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ p → f (N m) → m p
+appendsNodes ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ p → f (m Node) → m p
 appendsNodes = flip (>+)
 
 infix 9 appendsNodes as +<
 
 -- | Extracts child nodes from a `Foldable` of continuations and appends them to
 -- | a monadic parent node. Returns the given parent node.
-appendNodesM ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ f (N m) → m p → m p
+appendNodesM ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ f (m Node) → m p → m p
 appendNodesM = (=<<) <<< appendNodes
 
 infix 9 appendNodesM as >>+
 
-appendsNodesM ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ m p → f (N m) → m p
+appendsNodesM ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ m p → f (m Node) → m p
 appendsNodesM = flip (>>+)
 
 infix 9 appendsNodesM as +<<
@@ -191,11 +170,11 @@ rmAttrM ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → m e → m e
 rmAttrM = (=<<) <<< rmAttr
 
 -- | Creates an element, set attributes, and appends child nodes.
-el ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → m Element
+el ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (m Node) → m Element
 el tagName attributes children = do
   elem ← createElement tagName =<< doc
   (setAttrs attributes elem) # appendNodesM children
 
 -- -- | Calls `el` and applies the result to `nd`: `nd <<< el tagName attributes`.
-eln ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → N m
+eln ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (m Node) → m Node
 eln = (<<<) ((<<<) nd) <<< el

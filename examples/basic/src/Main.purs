@@ -10,7 +10,7 @@ import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (doc, el, eln, empty, nd, ndp, txn, (+<), (+<<))
+import Web.Chain.DOM (doc, el, eln, empty, nd, ndM, txn, (+<), (+<<))
 import Web.Chain.Event (changeM, onChange, onReady_)
 import Web.Chain.HTML (button, textField, val)
 import Web.Event.Class.EventTargetOp (allOff)
@@ -52,7 +52,7 @@ main = onReady_ $ \_ → do
                             ]
                       )
                   # changeM
-              , ndp welcomeMessageArea
+              , ndM welcomeMessageArea
               , nd $ button [ txn "Stop Greeting Me" ] (const $ allOff nameField *> empty welcomeMessageArea)
               ]
           ]

@@ -26,7 +26,8 @@ import Data.Tuple.Util ((*&))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (N, attrM, el, rmAttrM, setAttrsM)
+import Web.Chain.DOM (attrM, el, rmAttrM, setAttrsM)
+import Web.DOM (Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
 import Web.Event.Class.EventTargetOp (onM)
 import Web.Event.Event (Event)
@@ -125,7 +126,7 @@ valM ∷ ∀ m. MonadEffect m ⇒ m HTMLInputElement → m String
 valM = (=<<) val
 
 -- | Create a button.
-button ∷ ∀ f m a. MonadEffect m ⇒ Foldable f ⇒ f (N m) → (Event → Effect a) → m HTMLButtonElement
+button ∷ ∀ f m a. MonadEffect m ⇒ Foldable f ⇒ f (m Node) → (Event → Effect a) → m HTMLButtonElement
 button childNodesM click = do
   element ← el "button" Nil childNodesM # onM "click" click
   maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"button\" click' did not produce an HTMLButtonElement") (pure) $ HB.fromElement element
