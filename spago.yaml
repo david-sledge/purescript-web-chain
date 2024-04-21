@@ -2,3 +2,23 @@ workspace:
   extra_packages: {}
   package_set:
     registry: 41.2.0
+package:
+  dependencies:
+  - arrays
+  - effect
+  - either
+  - exceptions
+  - foldable-traversable
+  - integers
+  - lists
+  - maybe
+  - numbers
+  - prelude
+  - st
+  - tuples
+  - unsafe-coerce
+  - unsafe-reference
+  - web-dom
+  - web-events
+  - web-html
+  name: web-chain
