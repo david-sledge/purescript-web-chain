@@ -5,7 +5,7 @@ module Main
 import Prelude
 
 import Data.Maybe (maybe)
-import Data.Tuple.Util ((*&))
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
@@ -36,11 +36,11 @@ main = onReady_ $ \_ → do
       </body>
       --}
         _ ← bodyElem +<
-          [ eln "div" [ ("yes" *& "no") ]
+          [ eln "div" [ ("yes" /\ "no") ]
               [ txn "Hello, World!"
               , eln "br" [] []
               , txn "What's your name? "
-              , nd $ nameField
+              , ndM $ nameField
                   # onChange
                       ( const $ do
                           value ← val nameField
@@ -52,8 +52,8 @@ main = onReady_ $ \_ → do
                             ]
                       )
                   # changeM
-              , ndM welcomeMessageArea
-              , nd $ button [ txn "Stop Greeting Me" ] (const $ allOff nameField *> empty welcomeMessageArea)
+              , nd welcomeMessageArea
+              , ndM $ button [ txn "Stop Greeting Me" ] (const $ allOff nameField *> empty welcomeMessageArea)
               ]
           ]
         pure unit

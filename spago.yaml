@@ -14,10 +14,11 @@ package:
   - maybe
   - numbers
   - prelude
-  - st
   - tuples
+  - unordered-collections
   - unsafe-coerce
   - unsafe-reference
+  - web-cssom
   - web-dom
   - web-events
   - web-html

@@ -49,45 +49,66 @@ import Web.Event.Event (Event, EventType(EventType))
 import Web.Event.EventTarget (EventTarget, addEventListenerWithOptions, dispatchEvent, eventListener)
 import Web.HTML (Window)
 import Web.HTML.HTMLButtonElement as HB
+import Web.HTML.HTMLDivElement as HDv
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
 import Web.HTML.HTMLInputElement as HI
+import Web.HTML.HTMLTableCellElement as HTd
+import Web.HTML.HTMLTableRowElement as HTr
 
 class EventTargetOp et where
   toEventTarget ∷ et → EventTarget
 
+--------------------------------------------------------------------------------
 instance EventTargetOp EventTarget where
   toEventTarget = identity
 
+--------------------------------------------------------------------------------
+-- children
 instance EventTargetOp N.Node where
   toEventTarget = N.toEventTarget
 
-instance EventTargetOp E.Element where
-  toEventTarget = E.toEventTarget
-
-instance EventTargetOp HE.HTMLElement where
-  toEventTarget = HE.toEventTarget
-
-instance EventTargetOp HB.HTMLButtonElement where
-  toEventTarget = HB.toEventTarget
-
-instance EventTargetOp HD.HTMLDocument where
-  toEventTarget = HD.toEventTarget
-
-instance EventTargetOp HI.HTMLInputElement where
-  toEventTarget = HI.toEventTarget
-
-instance EventTargetOp Text where
-  toEventTarget = T.toEventTarget
-
-instance EventTargetOp Window where
-  toEventTarget = unsafeCoerce
+--------------------------------------------------------------------------------
+-- grandchildren
+instance EventTargetOp CharacterData where
+  toEventTarget = C.toEventTarget
 
 instance EventTargetOp Document where
   toEventTarget = D.toEventTarget
 
-instance EventTargetOp CharacterData where
-  toEventTarget = C.toEventTarget
+instance EventTargetOp E.Element where
+  toEventTarget = E.toEventTarget
+
+instance EventTargetOp Window where
+  toEventTarget = unsafeCoerce
+
+--------------------------------------------------------------------------------
+-- great-grandchildren
+instance EventTargetOp HD.HTMLDocument where
+  toEventTarget = HD.toEventTarget
+
+instance EventTargetOp HE.HTMLElement where
+  toEventTarget = HE.toEventTarget
+
+instance EventTargetOp Text where
+  toEventTarget = T.toEventTarget
+
+--------------------------------------------------------------------------------
+-- great-great-grandchildren
+instance EventTargetOp HB.HTMLButtonElement where
+  toEventTarget = HB.toEventTarget
+
+instance EventTargetOp HDv.HTMLDivElement where
+  toEventTarget = HDv.toEventTarget
+
+instance EventTargetOp HI.HTMLInputElement where
+  toEventTarget = HI.toEventTarget
+
+instance EventTargetOp HTd.HTMLTableCellElement where
+  toEventTarget = HTd.toEventTarget
+
+instance EventTargetOp HTr.HTMLTableRowElement where
+  toEventTarget = HTr.toEventTarget
 
 type EventOptions = { bubbles ∷ Boolean, cancelable ∷ Boolean, composed ∷ Boolean }
 

@@ -34,7 +34,7 @@ import Prelude
 
 import Data.Foldable (class Foldable, traverse_)
 import Data.Maybe (Maybe, maybe)
-import Data.Tuple (Tuple(Tuple))
+import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Class (class MonadEffect, liftEffect)
 import Web.DOM (Element, Node, Text)
 import Web.DOM.Class.DocumentOp (createElement, createTextNode)
@@ -44,12 +44,12 @@ import Web.Event.Class.EventTargetOp (allOff)
 import Web.HTML (HTMLDocument, window)
 import Web.HTML.Window (document)
 
--- | Put an instance of a `NodeOp` in a continuation.
-nd ∷ ∀ n m. Functor m => NodeOp n ⇒ m n → m Node
-nd mn = toNode <$> mn
+nd ∷ ∀ n m. NodeOp n ⇒ Applicative m ⇒ n → m Node
+nd = pure <<< toNode
 
-ndM ∷ ∀ n m. NodeOp n ⇒ Applicative m ⇒ n → m Node
-ndM = nd <<< pure
+-- | Put an instance of a `NodeOp` in a continuation.
+ndM ∷ ∀ n m. Functor m ⇒ NodeOp n ⇒ m n → m Node
+ndM = map toNode
 
 doc ∷ ∀ m. MonadEffect m ⇒ m HTMLDocument
 doc = liftEffect $ document =<< window
@@ -60,7 +60,7 @@ tx string = createTextNode string =<< doc
 
 -- | Calls `tx` and applies the result to `nd`: `nd <<< tx`.
 txn ∷ ∀ m. MonadEffect m ⇒ String → m Node
-txn = nd <<< tx
+txn = ndM <<< tx
 
 -- | Extracts child nodes from a `Foldable` of continuations and appends them to
 -- | a parent node. Returns the given parent node.
@@ -138,17 +138,17 @@ emptyM = (=<<) empty
 
 -- | Sets the attributes of an element. Existing attributes of the same names
 -- | are overwritten. New names create new attributes. The element is returned.
-setAttrs ∷ ∀ e f m. Foldable f ⇒ ElementOp e ⇒ MonadEffect m ⇒ f (Tuple String String) → e → m e
+setAttrs ∷ ∀ e f m. Foldable f ⇒ ElementOp e ⇒ MonadEffect m ⇒ f (String /\ String) → e → m e
 setAttrs attributes element = do
   traverse_
-    ( \(Tuple name value) → setAttribute name value element
+    ( \(name /\ value) → setAttribute name value element
     )
     attributes
   pure element
 
 -- | Sets the attributes of an element. Existing attributes of the same names
 -- | are overwritten. New names create new attributes. The element is returned.
-setAttrsM ∷ ∀ e f m. Foldable f ⇒ ElementOp e ⇒ MonadEffect m ⇒ f (Tuple String String) → m e → m e
+setAttrsM ∷ ∀ e f m. Foldable f ⇒ ElementOp e ⇒ MonadEffect m ⇒ f (String /\ String) → m e → m e
 setAttrsM = (=<<) <<< setAttrs
 
 -- | Gets the value of the named attibute.
@@ -170,11 +170,11 @@ rmAttrM ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → m e → m e
 rmAttrM = (=<<) <<< rmAttr
 
 -- | Creates an element, set attributes, and appends child nodes.
-el ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (m Node) → m Element
+el ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (String /\ String) → f2 (m Node) → m Element
 el tagName attributes children = do
   elem ← createElement tagName =<< doc
   (setAttrs attributes elem) # appendNodesM children
 
--- -- | Calls `el` and applies the result to `nd`: `nd <<< el tagName attributes`.
-eln ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (m Node) → m Node
-eln = (<<<) ((<<<) nd) <<< el
+-- | Calls `el` and applies the result to `nd`: `nd <<< el tagName attributes`.
+eln ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (String /\ String) → f2 (m Node) → m Node
+eln = (<<<) ((<<<) ndM) <<< el

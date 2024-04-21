@@ -41,6 +41,7 @@ workspace:
         - partial
         - prelude
         - profunctor
+        - record
         - refs
         - safe-coerce
         - st
@@ -49,15 +50,19 @@ workspace:
         - transformers
         - tuples
         - type-equality
+        - typelevel-prelude
         - unfoldable
+        - unordered-collections
         - unsafe-coerce
         - unsafe-reference
         - web-chain
+        - web-cssom
         - web-dom
         - web-events
         - web-file
         - web-html
         - web-storage
+        - web-uievents
     basic:
       path: examples/basic
       dependencies:
@@ -102,6 +107,7 @@ workspace:
         - partial
         - prelude
         - profunctor
+        - record
         - refs
         - safe-coerce
         - st
@@ -110,15 +116,19 @@ workspace:
         - transformers
         - tuples
         - type-equality
+        - typelevel-prelude
         - unfoldable
+        - unordered-collections
         - unsafe-coerce
         - unsafe-reference
         - web-chain
+        - web-cssom
         - web-dom
         - web-events
         - web-file
         - web-html
         - web-storage
+        - web-uievents
     dialog:
       path: examples/dialog
       dependencies:
@@ -163,6 +173,7 @@ workspace:
         - partial
         - prelude
         - profunctor
+        - record
         - refs
         - safe-coerce
         - st
@@ -171,15 +182,19 @@ workspace:
         - transformers
         - tuples
         - type-equality
+        - typelevel-prelude
         - unfoldable
+        - unordered-collections
         - unsafe-coerce
         - unsafe-reference
         - web-chain
+        - web-cssom
         - web-dom
         - web-events
         - web-file
         - web-html
         - web-storage
+        - web-uievents
     web-chain:
       path: ./
       dependencies:
@@ -193,10 +208,11 @@ workspace:
         - maybe
         - numbers
         - prelude
-        - st
         - tuples
+        - unordered-collections
         - unsafe-coerce
         - unsafe-reference
+        - web-cssom
         - web-dom
         - web-events
         - web-html
@@ -237,6 +253,7 @@ workspace:
         - partial
         - prelude
         - profunctor
+        - record
         - refs
         - safe-coerce
         - st
@@ -245,14 +262,18 @@ workspace:
         - transformers
         - tuples
         - type-equality
+        - typelevel-prelude
         - unfoldable
+        - unordered-collections
         - unsafe-coerce
         - unsafe-reference
+        - web-cssom
         - web-dom
         - web-events
         - web-file
         - web-html
         - web-storage
+        - web-uievents
   package_set:
     address:
       registry: 41.2.0
@@ -1072,6 +1093,14 @@ packages:
       - newtype
       - prelude
       - tuples
+  record:
+    type: registry
+    version: 4.0.0
+    integrity: sha256-Za5U85bTRJEfGK5Sk4hM41oXy84YQI0I8TL3WUn1Qzg=
+    dependencies:
+      - functions
+      - prelude
+      - unsafe-coerce
   refs:
     type: registry
     version: 6.0.0
@@ -1160,6 +1189,13 @@ packages:
     version: 4.0.1
     integrity: sha256-Hs9D6Y71zFi/b+qu5NSbuadUQXe5iv5iWx0226vOHUw=
     dependencies: []
+  typelevel-prelude:
+    type: registry
+    version: 7.0.0
+    integrity: sha256-uFF2ph+vHcQpfPuPf2a3ukJDFmLhApmkpTMviHIWgJM=
+    dependencies:
+      - prelude
+      - type-equality
   unfoldable:
     type: registry
     version: 6.0.0
@@ -1170,6 +1206,21 @@ packages:
       - partial
       - prelude
       - tuples
+  unordered-collections:
+    type: registry
+    version: 3.0.1
+    integrity: sha256-vhQls+yxpDhaIH2vTkmP04pWo7iX+KP0a+d4UoF72cE=
+    dependencies:
+      - arrays
+      - enums
+      - functions
+      - integers
+      - lists
+      - prelude
+      - record
+      - tuples
+      - typelevel-prelude
+      - unfoldable
   unsafe-coerce:
     type: registry
     version: 6.0.0
@@ -1181,6 +1232,14 @@ packages:
     integrity: sha256-zU7BhfJU14nXQRZG9iADsp0mSiKhz07OcKyjRB2YT+Y=
     dependencies:
       - prelude
+  web-cssom:
+    type: registry
+    version: 2.0.0
+    integrity: sha256-lyplmD0EpltKxPC6QJt1RQrrwurC9x/wigiTf9IrK2o=
+    dependencies:
+      - web-dom
+      - web-html
+      - web-uievents
   web-dom:
     type: registry
     version: 6.0.0
@@ -1220,3 +1279,9 @@ packages:
     dependencies:
       - nullable
       - web-events
+  web-uievents:
+    type: registry
+    version: 4.0.0
+    integrity: sha256-Vtp5m/8IWP3flDXpnVn3Mxq8lCFDlBFp5eBnB+uO/CM=
+    dependencies:
+      - web-html

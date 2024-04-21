@@ -17,9 +17,12 @@ import Web.HTML.HTMLDocument as HD
 class NodeOp d <= DocumentOp d where
   toDocument ∷ d → Document
 
+--------------------------------------------------------------------------------
 instance DocumentOp Document where
   toDocument = identity
 
+--------------------------------------------------------------------------------
+-- children
 instance DocumentOp HTMLDocument where
   toDocument = HD.toDocument
 

@@ -2,16 +2,21 @@
 module Web.Chain.HTML
   ( button
   , disable
+  , div
   , enable
   , isEnabled
   , maxLen
   , minLen
   , setAutocomplete
   , setLenLimits
+  , table
+  , td
   , textField
+  , tr
   , val
   , valM
-  ) where
+  )
+  where
 
 import Prelude
 
@@ -19,10 +24,10 @@ import Data.Either (Either(Left, Right), either)
 import Data.Foldable (class Foldable, intercalate)
 import Data.Int (fromString, toNumber)
 import Data.List (List(Nil), (:))
-import Data.List.Util (s, (&:))
+import Data.List.Util (s)
 import Data.Maybe (Maybe(Nothing), fromMaybe, maybe)
 import Data.Number.Format (toString)
-import Data.Tuple.Util ((*&))
+import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
@@ -33,8 +38,12 @@ import Web.Event.Class.EventTargetOp (onM)
 import Web.Event.Event (Event)
 import Web.HTML (HTMLButtonElement, HTMLInputElement)
 import Web.HTML.HTMLButtonElement as HB
+import Web.HTML.HTMLDivElement as HD
 import Web.HTML.HTMLInputElement (value)
 import Web.HTML.HTMLInputElement as HI
+import Web.HTML.HTMLTableCellElement as HTD
+import Web.HTML.HTMLTableElement as HT
+import Web.HTML.HTMLTableRowElement as HTR
 
 -- | Create a plain ol' input field of type text with a default value.
 textField ∷ ∀ m. MonadEffect m ⇒ String → m HTMLInputElement
@@ -43,7 +52,7 @@ textField defaultValue =
     (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"input\" val' did not produce an HTMLInputElement")
     pure <<<
     HI.fromElement =<<
-    el "input" (("value" *& defaultValue) &: ("type" *& "text")) Nil
+    el "input" [("value" /\ defaultValue), ("type" /\ "text")] []
 
 {-
 text field functions:
@@ -73,7 +82,7 @@ enable = rmAttrM "disabled"
 
 -- | Disable an input. The input is returned.
 disable ∷ ∀ e m. ElementOp e ⇒ MonadEffect m ⇒ m e → m e
-disable = setAttrsM (s ("disabled" *& "disabled"))
+disable = setAttrsM (s ("disabled" /\ "disabled"))
 
 -- | Is this input enabled?
 isEnabled ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ m e → m Boolean
@@ -97,15 +106,15 @@ setLenLimits min mMax mInput =
       ( \attrs →
           if min < 0 then Left $ s "min may not be less than zero."
           else Right $
-            if min > 0 then ("minlength" *& toString (toNumber min)) : attrs
-            else ("minlength" *& "") : attrs
+            if min > 0 then ("minlength" /\ toString (toNumber min)) : attrs
+            else ("minlength" /\ "") : attrs
       ) $
     maybe
-      (Right $ s ("maxlength" *& ""))
+      (Right $ s ("maxlength" /\ ""))
       ( \max →
           if min > max then Left $ s "max may not be less than min."
           else if max < 1 then Left $ s "max may must be at least 1."
-          else Right $ s ("maxlength" *& toString (toNumber max))
+          else Right $ s ("maxlength" /\ toString (toNumber max))
       )
       mMax
 
@@ -129,4 +138,24 @@ valM = (=<<) val
 button ∷ ∀ f m a. MonadEffect m ⇒ Foldable f ⇒ f (m Node) → (Event → Effect a) → m HTMLButtonElement
 button childNodesM click = do
   element ← el "button" Nil childNodesM # onM "click" click
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"button\" click' did not produce an HTMLButtonElement") (pure) $ HB.fromElement element
+  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"button\" click' did not produce an HTMLButtonElement") pure $ HB.fromElement element
+
+div ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HD.HTMLDivElement
+div attributes children = do
+  element ← el "div" attributes children
+  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"div\"' did not produce an HTMLDivElement") pure $ HD.fromElement element
+
+tr ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTR.HTMLTableRowElement
+tr attributes children = do
+  element ← el "tr" attributes children
+  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"tr\"' did not produce an HTMLTableRowElement") pure $ HTR.fromElement element
+
+td ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTD.HTMLTableCellElement
+td attributes children = do
+  element ← el "td" attributes children
+  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"td\"' did not produce an HTMLTableCellElement") pure $ HTD.fromElement element
+
+table ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HT.HTMLTableElement
+table attributes children = do
+  element ← el "tr" attributes children
+  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"table\"' did not produce an HTMLTableElement") pure $ HT.fromElement element

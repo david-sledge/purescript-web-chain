@@ -4,28 +4,33 @@
     "clean": "rimraf output && rimraf .spago",
     "postinstall": "spago install",
 
-    "spago-version": "echo -n \"spago version: \" & spago --version",
-    "esbuild-version": "echo -n \"esbuild version: \" & esbuild --version",
-    "purs-version": "echo -n \"purescript version: \" & purs --version",
-    "psa-version": "echo -n \"purescript-psa version: \" & psa --version",
-    "purs-tidy-version": "echo -n \"purs-tidy version: \" & purs-tidy --version",
-    "versions": "npm run -s spago-version & npm run -s esbuild-version & npm run -s purs-version & npm run -s psa-version & npm run -s purs-tidy-version",
+    "node-version": "echo -n \"nodejs version: \" && node --version",
+    "npm-version": "echo -n \"npm version: \" && npm --version",
+    "esbuild-version": "echo -n \"esbuild version: \" && esbuild --version",
+    "inline-source-version": "echo -n \"inline-source-cli version: \" && inline-source --version",
+    "psa-version": "echo -n \"purescript-psa version: \" && psa --version",
+    "purs-tidy-version": "echo -n \"purs-tidy version: \" && purs-tidy --version",
+    "purs-version": "echo -n \"purescript version: \" && purs --version",
+    "rimraf-version": "echo -n \"rimraf version: \" && rimraf --version",
+    "spago-version": "echo -n \"spago version: \" && spago --version",
+    "versions": "npm run -s node-version && npm run -s npm-version && npm run -s esbuild-version && npm run -s inline-source-version && npm run -s purs-version && npm run -s psa-version && npm run -s purs-tidy-version && npm run -s spago-version",
 
     "build": "spago build -p web-chain",
     "format": "purs-tidy format-in-place libs examples",
     "check-formatting": "purs-tidy check libs examples",
 
-    "example-all": "npm run -s example-b4-unload-event & npm run -s example-basic & npm run -s example-dialog",
-    "example-b4-unload-event": "spago bundle -p b4-unload-event --bundle-type app --outfile dist/index.js && cp examples/b4-unload-event/html/index.html examples/b4-unload-event/dist/",
-    "example-basic": "spago bundle -p basic --bundle-type app --outfile dist/index.js && cp examples/basic/html/index.html examples/basic/dist/",
-    "example-dialog": "spago bundle -p dialog --bundle-type app --outfile dist/index.js && cp examples/dialog/html/index.html examples/dialog/dist/"
+    "example-b4-unload-event": "examples/bundle.sh b4-unload-event",
+    "example-basic": "examples/bundle.sh basic",
+    "example-dialog": "examples/bundle.sh dialog",
+    "example-all": "npm run -s example-b4-unload-event && npm run -s example-basic && npm run -s example-dialog"
   },
   "devDependencies": {
     "esbuild": "^0.14.38",
+    "inline-source-cli": "^2.0.0",
+    "purescript": "^0.15.15",
     "purescript-psa": "^0.8.2",
     "purs-tidy": "^0.7.2",
     "rimraf": "^3.0.2",
-    "spago": "^0.93.0",
-    "purescript": "^0.15.15"
+    "spago": "^0.93.0"
   }
 }

@@ -5,7 +5,7 @@ module Main
 import Prelude
 
 import Data.Maybe (maybe)
-import Data.Tuple.Util ((*&))
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Console (log)
@@ -29,10 +29,10 @@ main = onReady_ $ \_ →
     (liftEffect <<< throwException $ error "No document body")
     ( \bodyElem → do
         mDialog <- fromElement <$> el "dialog" []
-          [ eln "form" [ "method" *& "dialog" ]
+          [ eln "form" [ "method" /\ "dialog" ]
               [ eln "p" []
-                  [ eln "label" [ "for" *& "favAnimal" ] [ txn "Favorite animal:" ]
-                  , eln "select" [ "name" *& "favAnimal" ]
+                  [ eln "label" [ "for" /\ "favAnimal" ] [ txn "Favorite animal:" ]
+                  , eln "select" [ "name" /\ "favAnimal" ]
                       [ eln "option" [] []
                       , eln "option" [] [ txn "Brine shrimp" ]
                       , eln "option" [] [ txn "Red panda" ]
@@ -40,16 +40,16 @@ main = onReady_ $ \_ →
                       ]
                   ]
               , eln "div" []
-                  [ nd $ el "button" [ "type" *& "reset" ] [ txn "Cancel" ]
-                  , eln "button" [ "type" *& "submit" ] [ txn "Confirm" ]
+                  [ ndM $ el "button" [ "type" /\ "reset" ] [ txn "Cancel" ]
+                  , eln "button" [ "type" /\ "submit" ] [ txn "Confirm" ]
                   ]
               ]
           ]
         dialog <- maybe (liftEffect <<< throwException $ error "Issue with dialog") pure mDialog
         _ ← bodyElem +<
-          [ ndM dialog
+          [ nd dialog
           , eln "div" []
-              [ nd $ button [ txn "Update details" ]
+              [ ndM $ button [ txn "Update details" ]
                   ( const $ do
                       showModal dialog
                       openCheck dialog

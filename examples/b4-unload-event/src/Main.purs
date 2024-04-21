@@ -6,7 +6,7 @@ import Data.Maybe (maybe)
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (doc, eln, nd, txn, (+<))
+import Web.Chain.DOM (doc, eln, ndM, txn, (+<))
 import Web.Chain.Event (onReady_)
 import Web.Chain.HTML (textField, val)
 import Web.Event.Class.EventTargetOp (offM, on, onM)
@@ -31,7 +31,7 @@ main = onReady_ $ \_ →
         nameInput ← textField ""
         _ ← bodyElem +<
           [ eln "h1" [] [ txn "BeforeUnloadEvent" ]
-          , nd $ nameInput # on "input"
+          , ndM $ nameInput # on "input"
               ( \_ → do
                   value <- val nameInput
                   window #

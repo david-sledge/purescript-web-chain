@@ -6,6 +6,7 @@ module Web.DOM.Class.NodeOp
   , childNodes
   , class NodeOp
   , clone
+  , contains
   , deepClone
   , firstChild
   , hasChildNodes
@@ -26,7 +27,8 @@ module Web.DOM.Class.NodeOp
   , setTextContent
   , textContent
   , toNode
-  ) where
+  )
+  where
 
 import Prelude
 
@@ -42,42 +44,62 @@ import Web.DOM.Text as T
 import Web.Event.Class.EventTargetOp (class EventTargetOp)
 import Web.HTML.HTMLButtonElement (HTMLButtonElement)
 import Web.HTML.HTMLButtonElement as HB
+import Web.HTML.HTMLDivElement (HTMLDivElement)
+import Web.HTML.HTMLDivElement as HDv
 import Web.HTML.HTMLDocument (HTMLDocument)
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HE
 import Web.HTML.HTMLInputElement (HTMLInputElement)
 import Web.HTML.HTMLInputElement as HI
+import Web.HTML.HTMLTableCellElement as HTd
+import Web.HTML.HTMLTableRowElement as HTr
 
 class EventTargetOp n <= NodeOp n where
   toNode ∷ n → Node
 
+--------------------------------------------------------------------------------
 instance NodeOp Node where
   toNode = identity
 
+--------------------------------------------------------------------------------
+-- children
 instance NodeOp CharacterData where
   toNode = C.toNode
-
-instance NodeOp Text where
-  toNode = T.toNode
-
-instance NodeOp Element where
-  toNode = E.toNode
 
 instance NodeOp Document where
   toNode = D.toNode
 
+instance NodeOp Element where
+  toNode = E.toNode
+
+--------------------------------------------------------------------------------
+-- grandchildren
+instance NodeOp HTMLElement where
+  toNode = HE.toNode
+
+instance NodeOp HTMLDocument where
+  toNode = HD.toNode
+
+instance NodeOp Text where
+  toNode = T.toNode
+
+--------------------------------------------------------------------------------
+-- great-grandchildren
 instance NodeOp HTMLButtonElement where
   toNode = HB.toNode
 
-instance NodeOp HTMLElement where
-  toNode = HE.toNode
+instance NodeOp HTMLDivElement where
+  toNode = HDv.toNode
 
 instance NodeOp HTMLInputElement where
   toNode = HI.toNode
 
-instance NodeOp HTMLDocument where
-  toNode = HD.toNode
+instance NodeOp HTd.HTMLTableCellElement where
+  toNode = HTd.toNode
+
+instance NodeOp HTr.HTMLTableRowElement where
+  toNode = HTr.toNode
 
 meh ∷ ∀ n a. NodeOp n ⇒ (Node → a) → n → a
 meh n = n <<< toNode
@@ -156,3 +178,6 @@ appendChild = mehM <<< N.appendChild <<< toNode
 
 removeChild ∷ ∀ m p c. MonadEffect m ⇒ NodeOp c ⇒ NodeOp p ⇒ c → p → m Unit
 removeChild = mehM <<< N.removeChild <<< toNode
+
+contains ∷ ∀ m p c. MonadEffect m ⇒ NodeOp c ⇒ NodeOp p ⇒ c → p → m Boolean
+contains = mehM <<< N.contains <<< toNode

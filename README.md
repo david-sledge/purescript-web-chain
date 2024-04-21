@@ -27,7 +27,7 @@ main = onReady_ $ \ _ → do
       </body>
       --}
       _ ← bodyElem +< [
-        eln "div" [("yes" *& "no")] [
+        eln "div" [("yes" /\ "no")] [
           txn "Hello, World!",
           eln "br" [] [],
           txn "What's your name? ",
