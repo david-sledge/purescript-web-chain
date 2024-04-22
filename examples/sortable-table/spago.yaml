@@ -1,25 +1,26 @@
-workspace:
-  extra_packages: {}
-  package_set:
-    registry: 50.11.0
 package:
+  name: sortable-table
   dependencies:
+  - prelude
   - arrays
+  - console
+  - datetime
   - effect
   - either
   - exceptions
   - foldable-traversable
+  - formatters
   - integers
   - lists
   - maybe
+  - now
   - numbers
-  - prelude
   - tuples
   - unordered-collections
   - unsafe-coerce
   - unsafe-reference
+  - web-chain
   - web-cssom
   - web-dom
   - web-events
   - web-html
-  name: web-chain

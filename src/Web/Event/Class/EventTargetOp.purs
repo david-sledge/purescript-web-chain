@@ -31,7 +31,7 @@ module Web.Event.Class.EventTargetOp
 import Prelude
 
 import Control.Monad.ST (run)
-import Data.Array ((!!))
+import Data.Array ((!!), length)
 import Data.Array.ST (splice, unsafeThaw)
 import Data.Foldable (traverse_)
 import Data.Maybe (maybe)
@@ -242,8 +242,7 @@ typeOffM = (=<<) <<< typeOff
 -- | returned.
 allOff ∷ ∀ m t. Bind m ⇒ MonadEffect m ⇒ EventTargetOp t ⇒ t → m t
 allOff target = do
-  getAllListeners target >>=
-    traverse_ (\listenerDetails → unregisterListener listenerDetails target)
+  getAllListeners target >>= traverse_ (flip unregisterListener target)
   pure target
 
 -- | Removes all event handler functions from an event target. The target is

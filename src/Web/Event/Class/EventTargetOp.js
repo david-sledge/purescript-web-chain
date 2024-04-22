@@ -13,5 +13,5 @@ export const _getAllListeners = eventTarget => () =>
     eventTarget.registeredListeners :
     [];
 
-export const _rmListener = details => target =>
+export const _rmListener = details => target => () =>
     target.removeEventListener(details.eventType, details.listener, details.options);
