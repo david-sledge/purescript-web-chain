@@ -5,6 +5,7 @@ package:
   - arrays
   - console
   - datetime
+  - debug
   - effect
   - either
   - exceptions

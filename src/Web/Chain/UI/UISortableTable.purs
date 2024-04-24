@@ -3,16 +3,20 @@ module Web.Chain.UI.UISortableTable
   , SortableTable
   , changeSortOrder
   , clearTable
+  , getColumnNames
+  , getSortOrder
   , mkSortableTable
+  , mkSortableTableNoNames
   , sortTable
-  , updateRowData
+  , updateRowsByColPos
+  , updateRowsByColName
   )
   where
 
 import Prelude
 
-import Data.Array (snoc, sortBy)
-import Data.Foldable (class Foldable, foldM, foldl, indexl, intercalate, length, traverse_)
+import Data.Array (drop, cons, snoc, sortBy)
+import Data.Foldable (class Foldable, elem, foldM, foldl, indexl, intercalate, lookup, traverse_)
 import Data.HashMap as M
 import Data.HashSet as S
 import Data.Hashable (class Hashable)
@@ -37,63 +41,65 @@ foreign import data SortableTable ∷
   Type →
   (Type → Type) →
   (Type → Type) →
-  (Type → Type) →
   Type
 
-instance EventTargetOp (SortableTable k a f1 f2 f3) where
+instance EventTargetOp (SortableTable k a f1 f2) where
   toEventTarget = unsafeCoerce
 
-instance NodeOp (SortableTable k a f1 f2 f3) where
+instance NodeOp (SortableTable k a f1 f2) where
   toNode = unsafeCoerce
 
-instance ElementOp (SortableTable k a f1 f2 f3) where
+instance ElementOp (SortableTable k a f1 f2) where
   toElement = unsafeCoerce
 
-instance HTMLElementOp (SortableTable k a f1 f2 f3) where
+instance HTMLElementOp (SortableTable k a f1 f2) where
   toHTMLElement = unsafeCoerce
 
-type ColSpec k a f1 f2 f3 = {
-    classNames ∷ f2 String,
-    formatter ∷ k -> Maybe a -> SortableTable k a f1 f2 f3 → Effect Node,
-    heading ∷ (Effect Node /\ f3 String)
+type ColSpec k a f1 f2 = {
+    classNames ∷ f1 String,
+    formatter ∷ k → Maybe a → SortableTable k a f1 f2 → Effect Node,
+    heading ∷ (Effect Node /\ f2 String)
   }
 
-foreign import _setColSpecs ∷ ∀ k a f1 f2 f3.
-  f1 (ColSpec k a f1 f2 f3) → SortableTable k a f1 f2 f3 → Effect Unit
-foreign import _getColSpecs ∷ ∀ k a f1 f2 f3.
-  SortableTable k a f1 f2 f3 → Effect (f1 (ColSpec k a f1 f2 f3))
+foreign import _setColSpecs ∷ ∀ k a f1 f2.
+  Array (String /\ ColSpec k a f1 f2) → SortableTable k a f1 f2 → Effect Unit
+foreign import _getColSpecs ∷ ∀ k a f1 f2.
+  SortableTable k a f1 f2 → Effect (Array (String /\ ColSpec k a f1 f2))
 
-foreign import _setDataTableBody ∷ ∀ k a f1 f2 f3.
-  Element → SortableTable k a f1 f2 f3 → Effect Unit
-foreign import _getDataTableBody ∷ ∀ k a f1 f2 f3.
-  SortableTable k a f1 f2 f3 → Effect (Element)
+foreign import _setDataTableBody ∷ ∀ k a f1 f2.
+  Element → SortableTable k a f1 f2 → Effect Unit
+foreign import _getDataTableBody ∷ ∀ k a f1 f2.
+  SortableTable k a f1 f2 → Effect (Element)
 
-foreign import _setSortOrder ∷ ∀ k a f1 f2 f3.
-  Array (Int /\ Boolean) → SortableTable k a f1 f2 f3 → Effect Unit
-foreign import _getSortOrder ∷ ∀ k a f1 f2 f3.
-  SortableTable k a f1 f2 f3 → Effect (Array (Int /\ Boolean))
+foreign import _setSortOrder ∷ ∀ k a f1 f2.
+  Array (String /\ Boolean) → SortableTable k a f1 f2 → Effect Unit
+foreign import _getSortOrder ∷ ∀ k a f1 f2.
+  SortableTable k a f1 f2 → Effect (Array (String /\ Boolean))
 
-foreign import _setTableData ∷ ∀ k a f1 f2 f3.
-  MM.MMap k (HTMLTableRowElement /\ Array a) →
-  SortableTable k a f1 f2 f3 →
+foreign import _setTableData ∷ ∀ k a f1 f2.
+  MM.MMap k (HTMLTableRowElement /\ M.HashMap String a) →
+  SortableTable k a f1 f2 →
   Effect Unit
-foreign import _getTableData ∷ ∀ k a f1 f2 f3.
-  SortableTable k a f1 f2 f3 →
-  Effect (MM.MMap k (HTMLTableRowElement /\ Array a))
+foreign import _getTableData ∷ ∀ k a f1 f2.
+  SortableTable k a f1 f2 →
+  Effect (MM.MMap k (HTMLTableRowElement /\ M.HashMap String a))
 
-getSortOrder ∷ ∀ m k a f1 f2 f3.
+getSortOrder ∷ ∀ m k a f1 f2.
   MonadEffect m ⇒
-  SortableTable k a f1 f2 f3 →
-  m (Array (Int /\ Boolean))
+  SortableTable k a f1 f2 →
+  m (Array (String /\ Boolean))
 getSortOrder table = liftEffect $ _getSortOrder table
 
-sortTable ∷ ∀ m f2 f3 a f1 k.
+getColumnNames ∷ ∀ m k a f1 f2. MonadEffect m ⇒
+  SortableTable k a f1 f2 → m (Array String)
+getColumnNames table = liftEffect $ map fst <$> _getColSpecs table
+
+sortTable ∷ ∀ m k a f1 f2.
   MonadEffect m ⇒
-  Ord a ⇒
   Hashable k ⇒
-  Foldable f1 ⇒
-  SortableTable k a f1 f2 f3 →
-  m (SortableTable k a f1 f2 f3)
+  Ord a ⇒
+  SortableTable k a f1 f2 →
+  m (SortableTable k a f1 f2)
 sortTable table = do
   tableBody ← liftEffect $ _getDataTableBody table
   sortOrder ← getSortOrder table
@@ -104,10 +110,10 @@ sortTable table = do
         let f weight =
               maybe
                 EQ
-                (\ (col /\ isAsc) →
+                (\ (name /\ isAsc) →
                   let next = f $ weight + 1
                       dirF = if isAsc then identity else invert
-                      mRec2 = indexl col $ rowData2
+                      mRec2 = M.lookup name rowData2
                   in
                   maybe
                     (maybe next (const $ dirF LT) mRec2)
@@ -121,7 +127,7 @@ sortTable table = do
                         )
                         mRec2
                     ) $
-                    indexl col rowData1
+                    M.lookup name rowData1
                 ) $
                 indexl weight sortOrder
         in
@@ -131,109 +137,224 @@ sortTable table = do
 
 -- \x25b2 \x25bc
 
-changeSortOrder ∷ ∀ m f f2 f3 a f1 k.
-  Foldable f1 ⇒
+changeSortOrder ∷ ∀ m k a f1 f2 f3.
   MonadEffect m ⇒
-  Ord a ⇒
-  Foldable f ⇒
   Hashable k ⇒
-  f (Int /\ Boolean) →
-  SortableTable k a f1 f2 f3 →
-  m (SortableTable k a f1 f2 f3)
+  Ord a ⇒
+  Foldable f3 ⇒
+  f3 (String /\ Boolean) →
+  SortableTable k a f1 f2 →
+  m (SortableTable k a f1 f2)
 changeSortOrder newOrder table = do
-  colCount ← length <$> (liftEffect $ _getColSpecs table)
-  let (newSortOrder /\ _) = foldl (\ (sortOrder /\ set) (col /\ dir) →
-        if col < colCount && not (S.member col set)
-        then (snoc sortOrder (col /\ dir) /\ S.insert col set)
+  names ← liftEffect $ map fst <$> _getColSpecs table
+  let (newSortOrder /\ _) = foldl (\ (sortOrder /\ set) (name /\ dir) →
+        if elem name names && not (S.member name set)
+        then (snoc sortOrder (name /\ dir) /\ S.insert name set)
         else (sortOrder /\ set)
         ) ([] /\ S.empty) newOrder
   liftEffect $ _setSortOrder newSortOrder table
   sortTable table
 
-mkSortableTable ∷ ∀ m f k a f1 f2 f3.
-  Foldable f1 ⇒
+foldM_ ∷ ∀ m b f a. Foldable f ⇒ Monad m ⇒ (b → a → m b) → b → f a → m Unit
+foldM_ = compose (compose void) <<< foldM
+
+foldlWithItemCount ∷ ∀ b f a. Foldable f ⇒ (Int → b → a → b) → b → f a → b
+foldlWithItemCount f init = snd <<< foldl
+  (\ (cnt /\ acc) item → ((cnt + 1) /\ f cnt acc item)) (0 /\ init)
+
+foldWithItemCountM ∷ ∀ b f a m. Monad m ⇒ Foldable f ⇒
+  (Int → b → a → m b) → b → f a → m b
+foldWithItemCountM f init = map snd <<< foldM (\ (cnt /\ acc) item → do
+    acc' ← f cnt acc item
+    pure ((cnt + 1) /\ acc')) (0 /\ init)
+
+mkSortableTable_ ∷ ∀ m k a f1 f2 f3 f4 et.
   MonadEffect m ⇒
+  Hashable k ⇒
   Ord a ⇒
   Foldable f3 ⇒
-  Foldable f ⇒
-  Hashable k ⇒
-  f String →
-  f1 (ColSpec k a f1 f2 f3) →
-  m (SortableTable k a f1 f2 f3)
-mkSortableTable classNames colSpecs = do
-  ((sortOrder /\ headerCells) /\ _) <- foldM (\ ((sortOrder /\ headerCells) /\ col) colSpec → do
-    th <- el
-      "th"
-      ["class" /\ intercalate " " (snd colSpec.heading)]
-      [liftEffect $ fst colSpec.heading]
-    pure ((snoc sortOrder (col /\ true) /\ snoc headerCells (nd th)) /\ (col + 1))
-    ) (([] /\ []) /\ 0) colSpecs
+  Foldable f4 ⇒
+  EventTargetOp et ⇒
+  f3 String →
+  ( Element →
+    m ((Array (String /\ Boolean) /\ f4 (String /\ m et)) /\
+        Array (String /\ ColSpec k a f1 f2))) →
+  m (SortableTable k a f1 f2)
+mkSortableTable_ classNames f = do
+  tr ← el "tr" [] []
+  ((sortOrder /\ headerCells) /\ newColSpecs) ← f tr
   tableBody ← el "tbody" [] []
   table ← unsafeCoerce <$> el "table" ["class" /\ intercalate " " classNames] [
     eln "thead" [] [
-      eln "tr" [] headerCells
+      nd tr
     ],
     nd tableBody
   ]
-  void $ foldM (\ col cell -> onM "click" (\ _ -> do
-      sortOrder' <- getSortOrder table
-      void $ changeSortOrder (foldl
-          (\ acc s@(col' /\ _) -> if col' == col then acc else snoc acc s)
-          [col /\ maybe true (\ (col' /\ isAsc) ->
-            if col' == col
-            then not isAsc
-            else isAsc) (indexl 0 sortOrder')]
-          sortOrder') table
+  foldM_ (\ col (name /\ cell) → onM "click" (const do
+      sortOrder' ← getSortOrder table
+      let changeSort sort = void $ changeSortOrder sort table
+      maybe
+        (changeSort [name /\ true])
+        (\ (name' /\ isAsc) →
+          if name == name'
+          -- when the column selected is already the primary sort column,
+          -- whether it sorts ascending or descending is flipped
+          then changeSort <<< cons (name /\ not isAsc) $ drop 1 sortOrder'
+          -- otherwise, the clicked column is becomes the primary sort column
+          -- without chaning ascending or descending
+          else
+            let (newSortOrder /\ hasCol) =
+                  foldl (\ (acc /\ hasCol) s@(name_ /\ _) →
+                      if name == name_
+                      then (cons s acc /\ true)
+                      else (snoc acc s /\ hasCol)
+                    ) ([] /\ false) sortOrder'
+            in
+            changeSort if hasCol
+              then newSortOrder
+              else cons (name /\ true) newSortOrder
+          )
+          $ indexl 0 sortOrder'
       ) cell *> pure (col + 1)) 0 headerCells
-  liftEffect $ _setColSpecs colSpecs table
+  liftEffect $ _setColSpecs newColSpecs table
   liftEffect $ _setDataTableBody tableBody table
   liftEffect $ _setSortOrder sortOrder table
   tableData ← MM.new
   liftEffect $ _setTableData tableData table
   pure table
 
-updateRowData ∷ ∀ m f f2 f3 a f1 k.
+mkSortableTable ∷ ∀ m k a f1 f2 f3 f4.
   MonadEffect m ⇒
-  Ord a ⇒
-  Foldable f ⇒
-  Foldable f1 ⇒
-  Foldable f2 ⇒
   Hashable k ⇒
-  f (k /\ (Maybe (Array a) → Effect (Maybe (Array a)))) →
-  SortableTable k a f1 f2 f3 →
-  m (SortableTable k a f1 f2 f3)
-updateRowData updateFs table = do
+  Ord a ⇒
+  Foldable f2 ⇒
+  Foldable f3 ⇒
+  Foldable f4 ⇒
+  f3 String →
+  f4 (String /\ ColSpec k a f1 f2) →
+  m (SortableTable k a f1 f2)
+mkSortableTable classNames colSpecs =
+  mkSortableTable_ classNames \ tr →
+    foldM (\ ((sortOrder /\ headerCells) /\ colSpecs') (name /\ colSpec) → do
+      th ← el
+        "th"
+        ["class" /\ intercalate " " (snd colSpec.heading)]
+        [liftEffect $ fst colSpec.heading]
+      appendChild th tr
+      let name' = maybe name (\ _ →
+            let f num =
+                  let numName = name <> "_" <> show num in
+                  maybe numName (const <<< f $ num + 1) $ lookup numName colSpecs
+            in
+            f 0) $ lookup name colSpecs'
+      pure ((snoc sortOrder (name' /\ true) /\ snoc headerCells (name' /\ nd th)) /\ snoc colSpecs' (name' /\ colSpec))
+      ) (([] /\ []) /\ []) colSpecs
+
+mkSortableTableNoNames ∷ ∀ m k a f1 f2 f3 f4.
+  MonadEffect m ⇒
+  Hashable k ⇒
+  Ord a ⇒
+  Foldable f2 ⇒
+  Foldable f4 ⇒
+  Foldable f3 ⇒
+  f3 String →
+  f4 (ColSpec k a f1 f2) →
+  m (SortableTable k a f1 f2)
+mkSortableTableNoNames classNames colSpecs =
+  mkSortableTable_ classNames \ tr →
+    foldWithItemCountM (\ col ((sortOrder /\ headerCells) /\ colSpecs') colSpec → do
+      th ← el
+        "th"
+        ["class" /\ intercalate " " (snd colSpec.heading)]
+        [liftEffect $ fst colSpec.heading]
+      appendChild th tr
+      let name = "_" <> show col
+      pure ((snoc sortOrder (name /\ true) /\ snoc headerCells (name /\ nd th)) /\ (snoc colSpecs' (name /\ colSpec)))
+      ) (([] /\ []) /\ []) colSpecs
+
+updateRows ∷ ∀ m k a f1 f2 f3 b c.
+  MonadEffect m ⇒
+  Hashable k ⇒
+  Ord a ⇒
+  Foldable f1 ⇒
+  Foldable f3 ⇒
+  (
+    Array (String /\ ColSpec k a f1 f2) →
+    (HTMLTableRowElement /\ M.HashMap String a) →
+    b) →
+  (
+    Array (String /\ ColSpec k a f1 f2) →
+    c →
+    M.HashMap String a) →
+  f3 (k /\ (Maybe b → Effect (Maybe c))) →
+  SortableTable k a f1 f2 →
+  m (SortableTable k a f1 f2)
+updateRows f g updateFs table = do
   colSpecs ← liftEffect $ _getColSpecs table
   tableData ← liftEffect $ _getTableData table
-  -- when false $
   traverse_ (\ (key /\ updateF) → do
       mRowData ← MM.lookup key tableData
       void $ maybe (pure unit) (void <<< remove <<< fst) mRowData
-      liftEffect (updateF $ map snd mRowData) >>=
+      liftEffect (updateF $ f colSpecs <$> mRowData) >>=
         maybe
           (MM.delete key tableData)
-          (\ newData → do
-            newRowUi ← tr [] <<< snd $ foldl
-              (\ (col /\ acc) colSpec →
-                (col + 1) /\
-                  snoc acc
-                    (ndM $ td
-                      ["class" /\ intercalate " " (colSpec.classNames)]
-                      [liftEffect $ colSpec.formatter key (indexl col newData) table]))
-              (0 /\ [])
+          (\ newArrayedData → do
+            let newRowData = g colSpecs newArrayedData
+            newRowUi ← tr [] $ foldl
+              (\ acc (name /\ colSpec) →
+                snoc acc
+                  (ndM $ td
+                    ["class" /\ intercalate " " (colSpec.classNames)]
+                    [liftEffect $ colSpec.formatter key (M.lookup name newRowData) table]))
+              []
               colSpecs
-            MM.insert key (newRowUi /\ newData) tableData
+            MM.insert key (newRowUi /\ newRowData) tableData
           )
     ) updateFs
   sortTable table
 
-clearTable ∷ ∀ m k a f1 f2 f3.
+updateRowsByColPos ∷ ∀ m k a f1 f2 f3.
   MonadEffect m ⇒
-  SortableTable k a f1 f2 f3 →
-  m (SortableTable k a f1 f2 f3)
+  Hashable k ⇒
+  Ord a ⇒
+  Foldable f1 ⇒
+  Foldable f3 ⇒
+  f3 (k /\ (Maybe (Array (Maybe a)) → Effect (Maybe (Array (Maybe a))))) →
+  SortableTable k a f1 f2 →
+  m (SortableTable k a f1 f2)
+updateRowsByColPos =
+  updateRows
+    (\ colSpecs (_ /\ rowData) →
+      foldl (\ arrayedData (name /\ _) →
+          snoc arrayedData $ M.lookup name rowData
+        ) [] colSpecs)
+    (\ colSpecs newArrayedData →
+      foldlWithItemCount (\ col newRowData mColData →
+        maybe newRowData (\ colData →
+            maybe newRowData (\ (name /\ _) →
+                M.insert name colData newRowData
+              ) $ indexl col colSpecs
+          ) mColData
+      ) M.empty newArrayedData)
+
+updateRowsByColName ∷ ∀ m k a f1 f2 f3.
+  MonadEffect m ⇒
+  Hashable k ⇒
+  Ord a ⇒
+  Foldable f1 ⇒
+  Foldable f3 ⇒
+  f3 (k /\ (Maybe (M.HashMap String a) → Effect (Maybe (M.HashMap String a)))) →
+  SortableTable k a f1 f2 →
+  m (SortableTable k a f1 f2)
+updateRowsByColName = updateRows (const $ snd) (const $ identity)
+
+clearTable ∷ ∀ m k a f1 f2.
+  MonadEffect m ⇒
+  SortableTable k a f1 f2 →
+  m (SortableTable k a f1 f2)
 clearTable table = liftEffect do
-  tableData <- _getTableData table
+  tableData ← _getTableData table
   MM.clear tableData
-  tableBody <- _getDataTableBody table
+  tableBody ← _getDataTableBody table
   void $ empty tableBody
   pure table

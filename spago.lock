@@ -203,6 +203,7 @@ workspace:
         - arrays
         - console
         - datetime
+        - debug
         - effect
         - either
         - exceptions
@@ -232,6 +233,7 @@ workspace:
         - contravariant
         - control
         - datetime
+        - debug
         - distributive
         - effect
         - either

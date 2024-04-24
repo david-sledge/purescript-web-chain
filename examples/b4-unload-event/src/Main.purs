@@ -18,12 +18,12 @@ import Web.HTML.HTMLDocument (body)
 beforeUnloadHandler ∷ Event → Effect Unit
 beforeUnloadHandler ev = do
   fromEvent ev # maybe (pure unit)
-    ( \buev -> do
+    ( \buev → do
         preventDefault ev
         setReturnValue "true" buev
     )
 
-main :: Effect Unit
+main ∷ Effect Unit
 main = onReady_ $ \_ →
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
@@ -33,7 +33,7 @@ main = onReady_ $ \_ →
           [ eln "h1" [] [ txn "BeforeUnloadEvent" ]
           , ndM $ nameInput # on "input"
               ( \_ → do
-                  value <- val nameInput
+                  value ← val nameInput
                   window #
                     ( if value == "" then offM
                       else onM

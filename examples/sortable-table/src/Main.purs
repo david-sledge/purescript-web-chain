@@ -10,8 +10,10 @@ import Data.Array.Mutable as A
 import Data.DateTime.Instant (Instant, toDateTime)
 import Data.Either (either)
 import Data.Formatter.DateTime (formatDateTime)
+import Data.HashMap as M
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Tuple.Nested ((/\))
+import Debug (trace)
 import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Exception (error, throwException)
@@ -19,7 +21,7 @@ import Effect.Now (now)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.Chain.DOM (doc, el, eln, nd, ndM, txn, (+<))
 import Web.Chain.Event (onChange, onReady_)
-import Web.Chain.UI.UISortableTable (mkSortableTable, updateRowData)
+import Web.Chain.UI.UISortableTable (getSortOrder, mkSortableTable, updateRowsByColName)
 import Web.DOM (Element)
 import Web.HTML (HTMLInputElement)
 import Web.HTML.HTMLDocument (body)
@@ -31,7 +33,7 @@ data Col =
   | ColInt (Maybe Int)
   | ColDate (Maybe Instant)
 
-derive instance eqCol :: Eq Col
+derive instance eqCol ∷ Eq Col
 
 colString' ∷ String → Col
 colString' = ColString <<< Just
@@ -58,7 +60,7 @@ withColDate ∷ Col → Maybe Instant
 withColDate (ColDate md) = md
 withColDate _ = Nothing
 
-instance colOrd :: Ord Col where
+instance colOrd ∷ Ord Col where
   compare (ColString b1) (ColString b2) = compare b1 b2
   compare (ColBool b1) (ColBool b2) = compare b1 b2
   compare (ColInt b1) (ColInt b2) = compare b1 b2
@@ -70,60 +72,69 @@ main = onReady_ $ \ _ → do
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
     (\ bodyElem → do
-      instant <- liftEffect now
-      tbl <- mkSortableTable ["table", "table-striped", "table-bordered", "table-condensed", "table-hover"] [{
-          classNames: ["text-center"],
-          formatter: \ key mBool table → do
-            (checkbox :: HTMLInputElement) <- unsafeCoerce <$> el "input" (
+      instant ← liftEffect now
+      tbl ← mkSortableTable ["table", "table-striped", "table-bordered", "table-condensed", "table-hover"] [
+        "bool" /\ { classNames: ["text-center"]
+        , formatter: \ key mBool table → do
+            (checkbox ∷ HTMLInputElement) ← unsafeCoerce <$> el "input" (
               let attrs = ["type" /\ "checkbox"] in
               if maybe false withColBool mBool
               then snoc attrs ("checked" /\ "checked")
               else attrs) []
             ndM $ checkbox # onChange
-              (\ _ -> void $ updateRowData [
-                  (key /\ maybe (pure Nothing) (\ dat ->
-                      flip (updateAt 0) dat <<< ColBool <$> checked checkbox
-                    ))
-                ] table
-              ),
-          heading: (txn "Boolean Column" /\ ["text-center"])
-        }, {
-          classNames: [],
-          formatter: \ _ mString _ -> txn <<< fromMaybe "\x2014" $ flip bind withColString mString,
-          heading: (txn "String Column" /\ [])
-        }, {
-          classNames: ["text-end"],
-          formatter: \ _ mInt _ -> txn <<< maybe "\x2014" show $ flip bind withColInt mInt,
-          heading: (txn "Int Column" /\ ["text-end"])
-        }, {
-          classNames: [],
-          formatter: \ _ mDateTime _ -> txn <<< maybe "\x2014" (either (const "\x2014") identity <<< formatDateTime "YYYY-MM-DD HH:mm" <<< toDateTime) $ flip bind withColDate mDateTime,
-          heading: (txn "Date Column" /\ [])
-        }] >>= updateRowData [
-          (1 /\ \ _ → pure $ Just [
-            ColBool false,
-            colString' "Text",
-            colInt' 0,
-            colDate' instant
-          ]), (2 /\ \ _ → pure $ Just [
-            ColBool true,
-            ColString Nothing,
-            ColInt Nothing,
-            ColDate Nothing
+              (\ _ → void $ getSortOrder table >>=
+                  flip trace (\ _ →
+                    updateRowsByColName [
+                      (key /\ maybe (pure Nothing) (\ dat →
+                          Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked checkbox
+                        ))
+                    ] table)
+              ) --}
+        , heading: (txn "Boolean Column" /\ ["text-center"])
+        },
+        "string" /\ { classNames: []
+        , formatter: \ _ mString _ → txn <<< fromMaybe "\x2014" $ flip bind withColString mString
+        , heading: (txn "String Column" /\ [])
+        },
+        "int" /\ { classNames: ["text-end"]
+        , formatter: \ _ mInt _ → txn <<< maybe "\x2014" show $ flip bind withColInt mInt
+        , heading: (txn "Int Column" /\ ["text-end"])
+        },
+        "date" /\ { classNames: []
+        , formatter: \ _ mDateTime _ → txn <<<
+            maybe
+              "\x2014"
+              ( either
+                (const "\x2014")
+                identity
+                <<< formatDateTime "YYYY-MM-DD HH:mm" <<< toDateTime)
+              $ flip bind withColDate mDateTime
+        , heading: (txn "Date Column" /\ [])
+        }] >>= updateRowsByColName [
+          (1 /\ \ _ → pure <<< Just $ M.fromArray [
+            "bool" /\ ColBool false,
+            "string" /\ colString' "Text",
+            "int" /\ colInt' 0,
+            "date" /\ colDate' instant
+          ]), (2 /\ \ _ → pure <<< Just $ M.fromArray [
+            "bool" /\ ColBool true,
+            "string" /\ ColString Nothing,
+            "int" /\ ColInt Nothing,
+            "date" /\ ColDate Nothing
           ])
-        ] >>= updateRowData [
-          (2 /\ \ _ → pure $ Just [
-            ColBool true,
-            colString' "Sequence of characters",
-            ColInt Nothing,
-            colDate' instant
-          ]), (3 /\ \ _ → pure $ Just [
-            ColBool false,
-            colString' "String",
-            colInt' (-3),
-            ColDate Nothing
+        ] >>= updateRowsByColName [
+          (2 /\ \ _ → pure <<< Just $ M.fromArray [
+            "bool" /\ ColBool true,
+            "string" /\ colString' "Sequence of characters",
+            "int" /\ ColInt Nothing,
+            "date" /\ colDate' instant
+          ]), (3 /\ \ _ → pure <<< Just $ M.fromArray [
+            "bool" /\ ColBool false,
+            "string" /\ colString' "String",
+            "int" /\ colInt' (-3),
+            "date" /\ ColDate Nothing
           ])
-        ] >>= updateRowData [
+        ] >>= updateRowsByColName [
           (1 /\ \ _ → pure $ Nothing)
         ] -- >>= changeSortOrder [11 /\ true] --}
       void $ bodyElem +< [nd tbl]

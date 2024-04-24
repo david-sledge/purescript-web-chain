@@ -18,17 +18,17 @@ import Web.HTML.HTMLDocument (body)
 
 openCheck ∷ HTMLDialogElement → Effect Unit
 openCheck dialog = do
-  isOpen <- open dialog
+  isOpen ← open dialog
   log $ "Dialog " <>
     if isOpen then "open"
     else "closed"
 
-main :: Effect Unit
+main ∷ Effect Unit
 main = onReady_ $ \_ →
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
     ( \bodyElem → do
-        mDialog <- fromElement <$> el "dialog" []
+        mDialog ← fromElement <$> el "dialog" []
           [ eln "form" [ "method" /\ "dialog" ]
               [ eln "p" []
                   [ eln "label" [ "for" /\ "favAnimal" ] [ txn "Favorite animal:" ]
@@ -45,7 +45,7 @@ main = onReady_ $ \_ →
                   ]
               ]
           ]
-        dialog <- maybe (liftEffect <<< throwException $ error "Issue with dialog") pure mDialog
+        dialog ← maybe (liftEffect <<< throwException $ error "Issue with dialog") pure mDialog
         _ ← bodyElem +<
           [ nd dialog
           , eln "div" []
