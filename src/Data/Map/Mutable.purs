@@ -7,8 +7,7 @@ module Data.Map.Mutable
   , lookup
   , new
   , size
-  )
-  where
+  ) where
 
 import Prelude
 
@@ -32,7 +31,7 @@ new ∷ ∀ m k v. MonadEffect m ⇒ m (MMap k v)
 new = liftEffect _new
 
 insert ∷ ∀ m k v. MonadEffect m ⇒ k → v → MMap k v → m (Maybe v)
-insert = (<<<) ((<<<) liftEffect) <<< _insert Nothing Just
+insert = compose (compose liftEffect) <<< _insert Nothing Just
 
 freeze ∷ ∀ m k v. MonadEffect m ⇒ Hashable k ⇒ MMap k v → m (HashMap k v)
 freeze = liftEffect <<< flip (flip _freeze M.insert) empty

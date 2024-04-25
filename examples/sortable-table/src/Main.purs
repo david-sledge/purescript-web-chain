@@ -1,7 +1,6 @@
 module Main
   ( main
-  )
-  where
+  ) where
 
 import Prelude
 
@@ -24,8 +23,8 @@ import Web.HTML (HTMLInputElement)
 import Web.HTML.HTMLDocument (body)
 import Web.HTML.HTMLInputElement (checked)
 
-data Col =
-  ColBool Boolean
+data Col
+  = ColBool Boolean
   | ColString (Maybe String)
   | ColInt (Maybe Int)
   | ColDate (Maybe Instant)
@@ -65,79 +64,112 @@ instance colOrd ∷ Ord Col where
   compare _ _ = EQ
 
 main ∷ Effect Unit
-main = onReady_ $ \ _ → do
+main = onReady_ $ \_ → do
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
-    (\ bodyElem → do
-      instant ← liftEffect now
-      tbl ← mkSortableTable ["table", "table-striped", "table-bordered", "table-condensed", "table-hover"]
-        [ "bool"
-          /\ { classNames: ["text-center"]
-            , formatter: \ key mBool table → do
-                (checkbox ∷ HTMLInputElement) ← unsafeCoerce <$> el "input" (
-                  let attrs = ["type" /\ "checkbox"] in
-                  if maybe false withColBool mBool
-                  then snoc attrs ("checked" /\ "checked")
-                  else attrs) []
-                ndM $ checkbox # onChange
-                  (\ _ → void $ getSortOrder table >>=
-                      (\ _ →
-                        updateRowsByColName [
-                          (key /\ maybe (pure Nothing) (\ dat →
-                              Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked checkbox
-                            ))
-                        ] table)
-                  ) --}
-            , heading: (txn "Boolean Column" /\ ["text-center"])
-            }
-        , "string"
-          /\ { classNames: []
-            , formatter: \ _ mString _ → txn <<< fromMaybe "\x2014" $ flip bind withColString mString
-            , heading: (txn "String Column" /\ [])
-            }
-        , "int"
-          /\ { classNames: ["text-end"]
-            , formatter: \ _ mInt _ → txn <<< maybe "\x2014" show $ flip bind withColInt mInt
-            , heading: (txn "Int Column" /\ ["text-end"])
-            }
-        , "date"
-          /\ { classNames: []
-            , formatter: \ _ mDateTime _ → txn <<<
-                maybe
-                  "\x2014"
-                  ( either
-                    (const "\x2014")
-                    identity
-                    <<< formatDateTime "YYYY-MM-DD HH:mm" <<< toDateTime)
-                  $ flip bind withColDate mDateTime
-            , heading: (txn "Date Column" /\ [])
-            }
-        ] >>= updateRowsByColName [
-          (1 /\ \ _ → pure <<< Just $ M.fromArray [
-            "bool" /\ ColBool false,
-            "string" /\ colString' "Text",
-            "int" /\ colInt' 0,
-            "date" /\ colDate' instant
-          ]), (2 /\ \ _ → pure <<< Just $ M.fromArray [
-            "bool" /\ ColBool true,
-            "string" /\ ColString Nothing,
-            "int" /\ ColInt Nothing,
-            "date" /\ ColDate Nothing
-          ])
-        ] >>= updateRowsByColName [
-          (2 /\ \ _ → pure <<< Just $ M.fromArray [
-            "bool" /\ ColBool true,
-            "string" /\ colString' "Sequence of characters",
-            "int" /\ ColInt Nothing,
-            "date" /\ colDate' instant
-          ]), (3 /\ \ _ → pure <<< Just $ M.fromArray [
-            "bool" /\ ColBool false,
-            "string" /\ colString' "String",
-            "int" /\ colInt' (-3),
-            "date" /\ ColDate Nothing
-          ])
-        ] >>= updateRowsByColName [
-          (1 /\ \ _ → pure $ Nothing)
-        ] >>= changeSortOrder ["string" /\ true]
-      void $ bodyElem +< [nd tbl]
+    ( \bodyElem → do
+        instant ← liftEffect now
+        tbl ←
+          mkSortableTable [ "table", "table-striped", "table-bordered", "table-condensed", "table-hover" ]
+            [ "bool"
+                /\
+                  { classNames: [ "text-center" ]
+                  , formatter: \key mBool table → do
+                      (checkbox ∷ HTMLInputElement) ← unsafeCoerce <$> el "input"
+                        ( let
+                            attrs = [ "type" /\ "checkbox" ]
+                          in
+                            if maybe false withColBool mBool then snoc attrs ("checked" /\ "checked")
+                            else attrs
+                        )
+                        []
+                      ndM $ checkbox # onChange
+                        ( \_ → void $ getSortOrder table >>=
+                            ( \_ →
+                                updateRowsByColName
+                                  [ ( key /\ maybe (pure Nothing)
+                                        ( \dat →
+                                            Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked checkbox
+                                        )
+                                    )
+                                  ]
+                                  table
+                            )
+                        ) --}
+                  , heading: (txn "Boolean Column" /\ [ "text-center" ])
+                  }
+            , "string"
+                /\
+                  { classNames: []
+                  , formatter: \_ mString _ → txn <<< fromMaybe "\x2014" $ flip bind withColString mString
+                  , heading: (txn "String Column" /\ [])
+                  }
+            , "int"
+                /\
+                  { classNames: [ "text-end" ]
+                  , formatter: \_ mInt _ → txn <<< maybe "\x2014" show $ flip bind withColInt mInt
+                  , heading: (txn "Int Column" /\ [ "text-end" ])
+                  }
+            , "date"
+                /\
+                  { classNames: []
+                  , formatter: \_ mDateTime _ →
+                      txn <<<
+                        maybe
+                          "\x2014"
+                          ( either
+                              (const "\x2014")
+                              identity
+                              <<< formatDateTime "YYYY-MM-DD HH:mm"
+                              <<< toDateTime
+                          )
+                        $ flip bind withColDate mDateTime
+                  , heading: (txn "Date Column" /\ [])
+                  }
+            ]
+            >>= updateRowsByColName
+              [ ( 1 /\ \_ → pure <<< Just $ M.fromArray
+                    [ "bool" /\ ColBool false
+                    , "string" /\ colString' "Text"
+                    , "int" /\ colInt' 0
+                    , "date" /\ colDate' instant
+                    ]
+                )
+              , ( 2 /\ \_ → pure <<< Just $ M.fromArray
+                    [ "bool" /\ ColBool true
+                    , "string" /\ ColString Nothing
+                    , "int" /\ ColInt Nothing
+                    , "date" /\ ColDate Nothing
+                    ]
+                )
+              ]
+            >>= updateRowsByColName
+              [ ( 2 /\ \_ → pure <<< Just $ M.fromArray
+                    [ "bool" /\ ColBool true
+                    , "string" /\ colString' "Sequence of characters"
+                    , "int" /\ ColInt Nothing
+                    , "date" /\ colDate' instant
+                    ]
+                )
+              , ( 3 /\ \_ → pure <<< Just $ M.fromArray
+                    [ "bool" /\ ColBool false
+                    , "string" /\ colString' "String"
+                    , "int" /\ colInt' (-3)
+                    , "date" /\ ColDate Nothing
+                    ]
+                )
+              ]
+            >>= updateRowsByColName
+              [ (1 /\ \_ → pure $ Nothing)
+              ]
+            >>= changeSortOrder [ "string" /\ true ]
+            >>= updateRowsByColName
+              [ (1 /\ \_ → pure <<< Just $ M.fromArray
+                    [ "bool" /\ ColBool false
+                    , "string" /\ colString' "Text"
+                    , "int" /\ colInt' 1
+                    , "date" /\ colDate' instant
+                    ])
+              ]
+        void $ bodyElem +< [ nd tbl ]
     )

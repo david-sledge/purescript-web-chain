@@ -53,9 +53,11 @@ main = onReady_ $ \_ → do
                       )
                   # changeM
               , nd welcomeMessageArea
-              , ndM $ button [ txn "Stop Greeting Me" ] (const do
-                  void $ allOff nameField
-                  empty welcomeMessageArea)
+              , ndM $ button [ txn "Stop Greeting Me" ]
+                  ( const do
+                      void $ allOff nameField
+                      empty welcomeMessageArea
+                  )
               ]
           ]
         pure unit

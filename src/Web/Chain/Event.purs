@@ -10,6 +10,7 @@ module Web.Chain.Event
 
 import Prelude
 
+import Control.Bind (bindFlipped)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Web.Chain (doc)
@@ -54,4 +55,4 @@ change = trigger "change"
 -- | Triggers the change event handlers tied to the event target. The target is
 -- | returned.
 changeM ∷ ∀ m t. Bind m ⇒ EventTargetOp t ⇒ MonadEffect m ⇒ m t → m t
-changeM = (=<<) change
+changeM = bindFlipped change

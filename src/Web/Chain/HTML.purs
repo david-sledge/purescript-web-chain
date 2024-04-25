@@ -15,11 +15,11 @@ module Web.Chain.HTML
   , tr
   , val
   , valM
-  )
-  where
+  ) where
 
 import Prelude
 
+import Control.Bind (bindFlipped)
 import Data.Either (Either(Left, Right), either)
 import Data.Foldable (class Foldable, intercalate)
 import Data.Int (fromString, toNumber)
@@ -52,7 +52,7 @@ textField defaultValue =
     (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"input\" val' did not produce an HTMLInputElement")
     pure <<<
     HI.fromElement =<<
-    el "input" [("value" /\ defaultValue), ("type" /\ "text")] []
+    el "input" [ ("value" /\ defaultValue), ("type" /\ "text") ] []
 
 {-
 text field functions:
@@ -132,7 +132,7 @@ val input = liftEffect $ value input
 
 -- | Get the text from a text field.
 valM ∷ ∀ m. MonadEffect m ⇒ m HTMLInputElement → m String
-valM = (=<<) val
+valM = bindFlipped val
 
 -- | Create a button.
 button ∷ ∀ f m a. MonadEffect m ⇒ Foldable f ⇒ f (m Node) → (Event → Effect a) → m HTMLButtonElement

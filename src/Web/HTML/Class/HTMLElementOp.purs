@@ -4,8 +4,7 @@ module Web.HTML.Class.HTMLElementOp
   ( class HTMLElementOp
   , style
   , toHTMLElement
-  )
-  where
+  ) where
 
 import Prelude
 

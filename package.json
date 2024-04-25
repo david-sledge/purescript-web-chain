@@ -16,8 +16,8 @@
     "versions": "npm run -s node-version && npm run -s npm-version && npm run -s esbuild-version && npm run -s inline-source-version && npm run -s purs-version && npm run -s psa-version && npm run -s purs-tidy-version && npm run -s spago-version",
 
     "build": "spago build -p web-chain",
-    "format": "purs-tidy format-in-place libs examples",
-    "check-formatting": "purs-tidy check libs examples",
+    "format": "purs-tidy format-in-place src examples",
+    "check-formatting": "purs-tidy check src examples",
 
     "example-b4-unload-event": "examples/bundle.sh b4-unload-event",
     "example-basic": "examples/bundle.sh basic",

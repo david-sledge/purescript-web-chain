@@ -30,8 +30,9 @@ module Web.Event.Class.EventTargetOp
 
 import Prelude
 
+import Control.Bind (bindFlipped)
 import Control.Monad.ST (run)
-import Data.Array ((!!), length)
+import Data.Array ((!!))
 import Data.Array.ST (splice, unsafeThaw)
 import Data.Foldable (traverse_)
 import Data.Maybe (maybe)
@@ -142,7 +143,7 @@ onOptions ∷ ∀ a m t. MonadEffect m ⇒ EventTargetOp t ⇒ String → (Event
 onOptions typeStr f listenOptions target = registerListener typeStr f listenOptions target *> pure target
 
 onOptionsM ∷ ∀ a m t. MonadEffect m ⇒ EventTargetOp t ⇒ String → (Event → Effect a) → ListenerOptions → m t → m t
-onOptionsM typeStr f = (<<<) (=<<) $ onOptions typeStr f
+onOptionsM typeStr f = compose bindFlipped $ onOptions typeStr f
 
 -- | Attach an event handler function to the event target. The target is
 -- | returned.
@@ -152,7 +153,7 @@ on typeStr f = onOptions typeStr f toggleOptions
 -- | Attach an event handler function to the event target. The target is
 -- | returned.
 onM ∷ ∀ a m t. MonadEffect m ⇒ EventTargetOp t ⇒ String → (Event → Effect a) → m t → m t
-onM a f = (=<<) $ on a f
+onM a f = bindFlipped $ on a f
 
 -- | Gets all listeners tied to an event target. Each value returned is in the
 -- | form of a continuation that expects an function argument that takes four
@@ -199,7 +200,7 @@ offOptions typeStr f options target = do
 -- | Removes an event handler function from an event target. The target is
 -- | returned.
 offOptionsM ∷ ∀ a m t. MonadEffect m ⇒ EventTargetOp t ⇒ String → (Event → Effect a) → ListenerOptions → m t → m t
-offOptionsM typeStr f = (<<<) (=<<) $ offOptions typeStr f
+offOptionsM typeStr f = compose bindFlipped $ offOptions typeStr f
 
 -- | Removes an event handler function from an event target. The target is
 -- | returned.
@@ -209,7 +210,7 @@ off typeStr f = offOptions typeStr f toggleOptions
 -- | Removes an event handler function from an event target. The target is
 -- | returned.
 offM ∷ ∀ a m t. MonadEffect m ⇒ EventTargetOp t ⇒ String → (Event → Effect a) → m t → m t
-offM a f = (=<<) $ off a f
+offM a f = bindFlipped $ off a f
 
 -- | Removes all event handler functions of the given type from an event target.
 -- | The target is returned.
@@ -226,7 +227,7 @@ typeOffOptions typeStr options target = do
 -- | Removes all event handler functions of the given type from an event target.
 -- | The target is returned.
 typeOffOptionsM ∷ ∀ t m. MonadEffect m ⇒ EventTargetOp t ⇒ String → ListenerOptions → m t → m t
-typeOffOptionsM = (<<<) (=<<) <<< typeOffOptions
+typeOffOptionsM = compose bindFlipped <<< typeOffOptions
 
 -- | Removes all event handler functions of the given type from an event target.
 -- | The target is returned.
@@ -236,7 +237,7 @@ typeOff typeStr = typeOffOptions typeStr toggleOptions
 -- | Removes all event handler functions of the given type from an event target.
 -- | The target is returned.
 typeOffM ∷ ∀ m t. Bind m ⇒ MonadEffect m ⇒ EventTargetOp t ⇒ String → m t → m t
-typeOffM = (=<<) <<< typeOff
+typeOffM = bindFlipped <<< typeOff
 
 -- | Removes all event handler functions from an event target. The target is
 -- | returned.
@@ -248,7 +249,7 @@ allOff target = do
 -- | Removes all event handler functions from an event target. The target is
 -- | returned.
 allOffM ∷ ∀ m t. Bind m ⇒ MonadEffect m ⇒ EventTargetOp t ⇒ m t → m t
-allOffM = (=<<) allOff
+allOffM = bindFlipped allOff
 
 -- | Triggers the event handlers tied to the event type to the event target. The
 -- | target is returned.
@@ -260,7 +261,7 @@ triggerOptions evtType options target = liftEffect do
 -- | Triggers the event handlers tied to the event type to the event target. The
 -- | target is returned.
 triggerOptionsM ∷ ∀ t m. EventTargetOp t ⇒ MonadEffect m ⇒ String → EventOptions → m t → m t
-triggerOptionsM = (<<<) (=<<) <<< triggerOptions
+triggerOptionsM = compose bindFlipped <<< triggerOptions
 
 -- | Triggers the event handlers tied to the event type to the event target. The
 -- | target is returned.
@@ -270,4 +271,4 @@ trigger evtType = triggerOptions evtType { bubbles: false, cancelable: false, co
 -- | Triggers the event handlers tied to the event type to the event target. The
 -- | target is returned.
 triggerM ∷ ∀ t m. EventTargetOp t ⇒ MonadEffect m ⇒ String → m t → m t
-triggerM = (=<<) <<< trigger
+triggerM = bindFlipped <<< trigger

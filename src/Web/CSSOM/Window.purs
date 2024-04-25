@@ -1,8 +1,7 @@
 module Web.CSSOM.Window
   ( getComputedStyle
   , getDefaultComputedStyle
-  )
-  where
+  ) where
 
 import Prelude
 
@@ -19,13 +18,17 @@ foreign import _getComputedStyleJust ∷ Element → String → Window → Effec
 
 getComputedStyle ∷ ∀ n m. ElementOp n ⇒ MonadEffect m ⇒ n → Maybe String → Window → m CSSStyleDeclaration
 getComputedStyle n mS w =
-  let element = toElement n in
-  liftEffect $ maybe (_getComputedStyleNothing element) (_getComputedStyleJust element) mS w
+  let
+    element = toElement n
+  in
+    liftEffect $ maybe (_getComputedStyleNothing element) (_getComputedStyleJust element) mS w
 
 foreign import _getDefaultComputedStyleNothing ∷ Element → Window → Effect CSSStyleDeclaration
 foreign import _getDefaultComputedStyleJust ∷ Element → String → Window → Effect CSSStyleDeclaration
 
 getDefaultComputedStyle ∷ ∀ n m. ElementOp n ⇒ MonadEffect m ⇒ n → Maybe String → Window → m CSSStyleDeclaration
 getDefaultComputedStyle n mS w =
-  let element = toElement n in
-  liftEffect $ maybe (_getDefaultComputedStyleNothing element) (_getDefaultComputedStyleJust element) mS w
+  let
+    element = toElement n
+  in
+    liftEffect $ maybe (_getDefaultComputedStyleNothing element) (_getDefaultComputedStyleJust element) mS w

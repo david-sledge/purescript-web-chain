@@ -27,8 +27,7 @@ module Web.DOM.Class.NodeOp
   , setTextContent
   , textContent
   , toNode
-  )
-  where
+  ) where
 
 import Prelude
 
@@ -117,7 +116,7 @@ baseURI ∷ ∀ n. NodeOp n ⇒ n → Effect String
 baseURI = meh N.baseURI
 
 mehM ∷ ∀ (m ∷ Type → Type) (a ∷ Type) (n ∷ Type). MonadEffect m ⇒ NodeOp n ⇒ (Node → Effect a) → n → m a
-mehM = (<<<) liftEffect <<< meh
+mehM = compose liftEffect <<< meh
 
 ownerDocument ∷ ∀ m n. MonadEffect m ⇒ NodeOp n ⇒ n → m (Maybe Document)
 ownerDocument = mehM N.ownerDocument
@@ -150,7 +149,7 @@ nodeValue ∷ ∀ m n. MonadEffect m ⇒ NodeOp n ⇒ n → m (Maybe String)
 nodeValue = mehM N.nodeValue
 
 mehM1 ∷ ∀ b m a n. MonadEffect m ⇒ NodeOp n ⇒ (b → Node → Effect a) → b → n → m a
-mehM1 = (<<<) mehM
+mehM1 = compose mehM
 
 setNodeValue ∷ ∀ m n. MonadEffect m ⇒ NodeOp n ⇒ String → n → m Unit
 setNodeValue = mehM1 N.setNodeValue

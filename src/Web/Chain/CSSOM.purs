@@ -1,7 +1,9 @@
 -- | CSSOM manipulation tools that can be chained together.
 
 module Web.Chain.CSSOM
-  ( collapse
+  ( addClasses
+  , addClassesM
+  , collapse
   , collapseM
   , conceal
   , concealM
@@ -15,10 +17,9 @@ module Web.Chain.CSSOM
   , setCssPropM
   , show
   , showM
-  )
-  where
+  ) where
 
-import Prelude hiding (show)
+import Prelude hiding (add, show)
 
 import Control.Bind (bindFlipped)
 import Data.Foldable (class Foldable, traverse_)
@@ -28,6 +29,8 @@ import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Web.CSSOM.Lifted.CSSStyleDeclaration (getPropertyValue, setProperty)
 import Web.CSSOM.Window (getDefaultComputedStyle)
+import Web.DOM.Class.ElementOp (class ElementOp, classList)
+import Web.DOM.DOMTokenList (add)
 import Web.HTML (window)
 import Web.HTML.Class.HTMLElementOp (class HTMLElementOp, style)
 
@@ -43,7 +46,7 @@ setCssPropM ∷ ∀ m n. MonadEffect m ⇒ HTMLElementOp n ⇒ String → String
 setCssPropM = compose bindFlipped <<< setCssProp
 
 setCss ∷ ∀ m n f. MonadEffect m ⇒ HTMLElementOp n ⇒ Foldable f ⇒ f (String /\ String) → n → m n
-setCss cssProps n = traverse_ (\ (name /\ val) -> setCssProp name val n) cssProps *> pure n
+setCss cssProps n = traverse_ (\(name /\ val) -> setCssProp name val n) cssProps *> pure n
 
 setCssM ∷ ∀ m n f. MonadEffect m ⇒ HTMLElementOp n ⇒ Foldable f ⇒ f (String /\ String) → m n → m n
 setCssM = bindFlipped <<< setCss
@@ -94,8 +97,8 @@ show n = do
   when (val == "none") do
     -- get the stored value of the CSS attribute "display"
     val' ← liftEffect $ _retrieveDislayValue n
-    val'' ← if (val' == "none" || val' == "")
-      then do
+    val'' ←
+      if (val' == "none" || val' == "") then do
         win ← liftEffect window
         compStl ← getDefaultComputedStyle n Nothing win
         val'' ← getPropertyValue "display" compStl
@@ -107,3 +110,11 @@ show n = do
 
 showM ∷ ∀ m n. MonadEffect m ⇒ HTMLElementOp n ⇒ m n → m n
 showM = bindFlipped show
+
+addClasses :: forall m n f. MonadEffect m => ElementOp n => Foldable f => f String -> n -> m n
+addClasses classes n = do
+  classList n >>= compose liftEffect (flip traverse_ classes) <<< add
+  pure n
+
+addClassesM :: forall m n f. MonadEffect m => ElementOp n => Foldable f => f String -> m n -> m n
+addClassesM = bindFlipped <<< addClasses

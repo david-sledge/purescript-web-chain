@@ -32,6 +32,7 @@ module Web.Chain.DOM
 
 import Prelude
 
+import Control.Bind (bindFlipped)
 import Data.Foldable (class Foldable, traverse_)
 import Data.Maybe (Maybe, maybe)
 import Data.Tuple.Nested (type (/\), (/\))
@@ -66,25 +67,25 @@ txn = ndM <<< tx
 -- | a parent node. Returns the given parent node.
 appendNodes ∷ ∀ m p f. Foldable f ⇒ MonadEffect m ⇒ NodeOp p ⇒ f (m Node) → p → m p
 appendNodes childrenM parent = do
-  traverse_ ((=<<) (flip appendChild parent)) childrenM
+  traverse_ (bindFlipped (flip appendChild parent)) childrenM
   pure parent
 
 infix 9 appendNodes as >+
 
 appendsNodes ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ p → f (m Node) → m p
-appendsNodes = flip (>+)
+appendsNodes = flip appendNodes
 
 infix 9 appendsNodes as +<
 
 -- | Extracts child nodes from a `Foldable` of continuations and appends them to
 -- | a monadic parent node. Returns the given parent node.
 appendNodesM ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ f (m Node) → m p → m p
-appendNodesM = (=<<) <<< appendNodes
+appendNodesM = bindFlipped <<< appendNodes
 
 infix 9 appendNodesM as >>+
 
 appendsNodesM ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ m p → f (m Node) → m p
-appendsNodesM = flip (>>+)
+appendsNodesM = flip appendNodesM
 
 infix 9 appendsNodesM as +<<
 
@@ -102,7 +103,7 @@ detach c = parentNode c >>= maybe (pure c)
 -- | Descendant nodes and event listeners are not affected. The detatched node
 -- | is returned.
 detachM ∷ ∀ c m. MonadEffect m ⇒ NodeOp c ⇒ m c → m c
-detachM = (=<<) detach
+detachM = bindFlipped detach
 
 -- | Calls `detach` on the node and its descendants, and in addition removes all
 -- | event listeners from the detached node and descendants. The event listners
@@ -129,12 +130,12 @@ empty parentNode =
 -- | derivation thereof such as `Web.Event.Class.EventTargetOp.change` or
 -- | `Web.Event.Class.EventTargetOp.ready`. The removed node is returned.
 removeM ∷ ∀ c m. MonadEffect m ⇒ NodeOp c ⇒ m c → m c
-removeM = (=<<) remove
+removeM = bindFlipped remove
 
 -- | Calls `remove` on the all of the node's children. The emptied node is
 -- | returned.
 emptyM ∷ ∀ m p. MonadEffect m ⇒ NodeOp p ⇒ m p → m p
-emptyM = (=<<) empty
+emptyM = bindFlipped empty
 
 -- | Sets the attributes of an element. Existing attributes of the same names
 -- | are overwritten. New names create new attributes. The element is returned.
@@ -149,7 +150,7 @@ setAttrs attributes element = do
 -- | Sets the attributes of an element. Existing attributes of the same names
 -- | are overwritten. New names create new attributes. The element is returned.
 setAttrsM ∷ ∀ e f m. Foldable f ⇒ ElementOp e ⇒ MonadEffect m ⇒ f (String /\ String) → m e → m e
-setAttrsM = (=<<) <<< setAttrs
+setAttrsM = bindFlipped <<< setAttrs
 
 -- | Gets the value of the named attibute.
 attr ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → e → m (Maybe String)
@@ -157,7 +158,7 @@ attr = getAttribute
 
 -- | Gets the value of the named attibute.
 attrM ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → m e → m (Maybe String)
-attrM = (=<<) <<< attr
+attrM = bindFlipped <<< attr
 
 -- | Removes an attribute from an element. The element is returned.
 rmAttr ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → e → m e
@@ -167,7 +168,7 @@ rmAttr name element = do
 
 -- | Removes an attribute from an element. The element is returned.
 rmAttrM ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → m e → m e
-rmAttrM = (=<<) <<< rmAttr
+rmAttrM = bindFlipped <<< rmAttr
 
 -- | Creates an element, set attributes, and appends child nodes.
 el ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (String /\ String) → f2 (m Node) → m Element
@@ -177,4 +178,4 @@ el tagName attributes children = do
 
 -- | Calls `el` and applies the result to `nd`: `nd <<< el tagName attributes`.
 eln ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (String /\ String) → f2 (m Node) → m Node
-eln = (<<<) ((<<<) ndM) <<< el
+eln = compose (compose ndM) <<< el

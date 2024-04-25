@@ -7,8 +7,7 @@ module Web.DOM.Class.ElementOp
   , removeAttribute
   , setAttribute
   , toElement
-  )
-  where
+  ) where
 
 import Prelude
 

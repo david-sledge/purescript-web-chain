@@ -19,7 +19,7 @@ new ∷ ∀ m a. MonadEffect m ⇒ m (MArray a)
 new = liftEffect _new
 
 push ∷ ∀ m a. MonadEffect m ⇒ a → MArray a → m Unit
-push = (<<<) liftEffect <<< _push
+push = compose liftEffect <<< _push
 
 freeze ∷ ∀ m a. MonadEffect m ⇒ MArray a → m (Array a)
 freeze = liftEffect <<< _freeze
