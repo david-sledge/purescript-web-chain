@@ -1,142 +1,181 @@
 -- | DOM manipulation tools that can be chained together.
 
 module Web.Chain.DOM
-( N
-, appendNodes
-, attr
-, detach
-, el
-, eln
-, empty
-, nd
-, ndp
-, remove
-, rmAttr
-, setAttrs
-, tx
-, txn
-, (>+)
-) where
+  ( (+<)
+  , (+<<)
+  , (>+)
+  , (>>+)
+  , appendNodes
+  , appendNodesM
+  , appendsNodes
+  , appendsNodesM
+  , attr
+  , attrM
+  , detach
+  , detachM
+  , doc
+  , el
+  , eln
+  , empty
+  , emptyM
+  , nd
+  , ndM
+  , remove
+  , removeM
+  , rmAttr
+  , rmAttrM
+  , setAttrs
+  , setAttrsM
+  , tx
+  , txn
+  ) where
 
 import Prelude
 
-import Control.Monad.Reader (class MonadAsk, asks)
+import Control.Bind (bindFlipped)
 import Data.Foldable (class Foldable, traverse_)
-import Data.Maybe (Maybe(..))
-import Data.Tuple (Tuple(..))
+import Data.Maybe (Maybe, maybe)
+import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Class (class MonadEffect, liftEffect)
-import Unsafe.Coerce (unsafeCoerce)
-import Web.Chain.Class (class IsChildNode, class IsDocument, class IsElement, class IsParentNode, toChildNode, toDocument, toElement, toNode)
-import Web.Chain.Event (allOff)
-import Web.DOM as D
-import Web.DOM.ChildNode as C
-import Web.DOM.Document (createElement, createTextNode)
-import Web.DOM.Element (getAttribute, removeAttribute, setAttribute)
-import Web.DOM.Node (appendChild, firstChild)
-import Web.DOM.ParentNode as P
+import Web.DOM (Element, Node, Text)
+import Web.DOM.Class.DocumentOp (createElement, createTextNode)
+import Web.DOM.Class.ElementOp (class ElementOp, getAttribute, removeAttribute, setAttribute)
+import Web.DOM.Class.NodeOp (class NodeOp, appendChild, firstChild, parentNode, removeChild, toNode)
+import Web.Event.Class.EventTargetOp (allOff)
+import Web.HTML (HTMLDocument, window)
+import Web.HTML.Window (document)
 
--- | Heterogeneous continuation element type for child nodes.
--- |
--- | This type is used to pass a `Foldable` of heterogeneous data types where
--- | all types are instances of `IsChildNode` typically for the purpose of
--- | appending to an instance of `IsParentNode`.
-newtype N m =
-  N (∀ r. (∀ n. IsChildNode n ⇒ m n → r) → r)
+nd ∷ ∀ n m. NodeOp n ⇒ Applicative m ⇒ n → m Node
+nd = pure <<< toNode
 
--- | Put an instance of a `IsChildNode` in a continuation.
-nd ∷ ∀ n m. IsChildNode n ⇒ m n → N m
-nd mn = N \f → f mn
+-- | Put an instance of a `NodeOp` in a continuation.
+ndM ∷ ∀ n m. Functor m ⇒ NodeOp n ⇒ m n → m Node
+ndM = map toNode
 
-ndp ∷ ∀ n m. IsChildNode n ⇒ Applicative m ⇒ n → N m
-ndp = nd <<< pure
-
--- | Applies a function to a continuation and returns the result.
-runN ∷ ∀ r m.
-  N m →
-  (∀ n. IsChildNode n ⇒ m n → r) →
-  r
-runN (N f) = f
+doc ∷ ∀ m. MonadEffect m ⇒ m HTMLDocument
+doc = liftEffect $ document =<< window
 
 -- | Creates a text node from a `String`.
-tx ∷ ∀ m d. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ String → m D.Text
-tx string = liftEffect <<< createTextNode string =<< asks toDocument
+tx ∷ ∀ m. MonadEffect m ⇒ String → m Text
+tx string = createTextNode string =<< doc
 
 -- | Calls `tx` and applies the result to `nd`: `nd <<< tx`.
-txn ∷ ∀ m d. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ String → N m
-txn = nd <<< tx
+txn ∷ ∀ m. MonadEffect m ⇒ String → m Node
+txn = ndM <<< tx
 
 -- | Extracts child nodes from a `Foldable` of continuations and appends them to
 -- | a parent node. Returns the given parent node.
-appendNodes ∷ ∀ m p f. IsParentNode p ⇒ Foldable f ⇒ MonadEffect m ⇒ f (N m) → m p → m p
-appendNodes childrenM mParent = do
-  parent ← mParent
-  let parentNode = toNode parent
-  traverse_
-    ( \ mChild → do
-      child ← runN mChild (map toNode)
-      liftEffect $ appendChild child parentNode
-    ) childrenM *> pure parent
+appendNodes ∷ ∀ m p f. Foldable f ⇒ MonadEffect m ⇒ NodeOp p ⇒ f (m Node) → p → m p
+appendNodes childrenM parent = do
+  traverse_ (bindFlipped (flip appendChild parent)) childrenM
+  pure parent
 
 infix 9 appendNodes as >+
+
+appendsNodes ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ p → f (m Node) → m p
+appendsNodes = flip appendNodes
+
+infix 9 appendsNodes as +<
+
+-- | Extracts child nodes from a `Foldable` of continuations and appends them to
+-- | a monadic parent node. Returns the given parent node.
+appendNodesM ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ f (m Node) → m p → m p
+appendNodesM = bindFlipped <<< appendNodes
+
+infix 9 appendNodesM as >>+
+
+appendsNodesM ∷ ∀ m p f. NodeOp p ⇒ Foldable f ⇒ MonadEffect m ⇒ m p → f (m Node) → m p
+appendsNodesM = flip appendNodesM
+
+infix 9 appendsNodesM as +<<
 
 -- | Detatches a node from its parent node and returns the detached node.
 -- | Descendant nodes and event listeners are not affected. The detatched node
 -- | is returned.
-detach ∷ ∀ c m. MonadEffect m ⇒ IsChildNode c ⇒ m c → m c
-detach mChildNode = do
-  c ← mChildNode
-  let childNode = toChildNode c
-  liftEffect $ C.remove childNode
-  pure c
+detach ∷ ∀ c m. MonadEffect m ⇒ NodeOp c ⇒ c → m c
+detach c = parentNode c >>= maybe (pure c)
+  ( \parent → do
+      removeChild c parent
+      pure c
+  )
+
+-- | Detatches a node from its parent node and returns the detached node.
+-- | Descendant nodes and event listeners are not affected. The detatched node
+-- | is returned.
+detachM ∷ ∀ c m. MonadEffect m ⇒ NodeOp c ⇒ m c → m c
+detachM = bindFlipped detach
 
 -- | Calls `detach` on the node and its descendants, and in addition removes all
 -- | event listeners from the detached node and descendants. The event listners
--- | are removed provided that they were added using `Web.Chain.Event.on` or
--- | derivation thereof such as `Web.Chain.Event.change` or
--- | `Web.Chain.Event.ready`. The removed node is returned.
-remove ∷ ∀ c m. MonadEffect m ⇒ IsChildNode c ⇒ m c → m c
-remove mChildNode = do
-  childNode <- mChildNode
-  _ <- empty $ pure (unsafeCoerce childNode :: P.ParentNode)
-  detach <<< allOff $ pure childNode
+-- | are removed provided that they were added using `Web.Event.Class.EventTargetOp.on` or
+-- | derivation thereof such as `Web.Event.Class.EventTargetOp.change` or
+-- | `Web.Event.Class.EventTargetOp.ready`. The removed node is returned.
+remove ∷ ∀ c m. MonadEffect m ⇒ NodeOp c ⇒ c → m c
+remove childNode = do
+  _ ← empty childNode
+  detachM $ allOff childNode
 
 -- | Calls `remove` on the all of the node's children. The emptied node is
 -- | returned.
-empty ∷ ∀ m p. MonadEffect m ⇒ IsParentNode p ⇒ m p → m p
-empty mParentNode = do
-  parentNode ← mParentNode
-  let node = toNode parentNode
-  mChild ← liftEffect $ firstChild node
-  case mChild of
-    Just child → (remove $ pure (unsafeCoerce child ∷ C.ChildNode)) *> empty (pure parentNode)
-    _ → pure parentNode
+empty ∷ ∀ m p. MonadEffect m ⇒ NodeOp p ⇒ p → m p
+empty parentNode =
+  maybe
+    (pure parentNode)
+    (\child → remove child *> empty parentNode) =<<
+    firstChild parentNode
+
+-- | Calls `detach` on the node and its descendants, and in addition removes all
+-- | event listeners from the detached node and descendants. The event listners
+-- | are removed provided that they were added using `Web.Event.Class.EventTargetOp.on` or
+-- | derivation thereof such as `Web.Event.Class.EventTargetOp.change` or
+-- | `Web.Event.Class.EventTargetOp.ready`. The removed node is returned.
+removeM ∷ ∀ c m. MonadEffect m ⇒ NodeOp c ⇒ m c → m c
+removeM = bindFlipped remove
+
+-- | Calls `remove` on the all of the node's children. The emptied node is
+-- | returned.
+emptyM ∷ ∀ m p. MonadEffect m ⇒ NodeOp p ⇒ m p → m p
+emptyM = bindFlipped empty
 
 -- | Sets the attributes of an element. Existing attributes of the same names
 -- | are overwritten. New names create new attributes. The element is returned.
-setAttrs ∷ ∀ e f m. Foldable f ⇒ IsElement e ⇒ MonadEffect m ⇒ f (Tuple String String) → m e → m e
-setAttrs attributes mElement = do
-  element ← mElement
+setAttrs ∷ ∀ e f m. Foldable f ⇒ ElementOp e ⇒ MonadEffect m ⇒ f (String /\ String) → e → m e
+setAttrs attributes element = do
   traverse_
-    ( \ (Tuple name value) → liftEffect <<< setAttribute name value $ toElement element
-    ) attributes *> pure element
-
--- | Gets the value of the named attibute.
-attr ∷ ∀ m e. MonadEffect m ⇒ IsElement e ⇒ String → m e → m (Maybe String)
-attr name element = liftEffect <<< getAttribute name =<< toElement <$> element
-
--- | Removes an attribute from an element. The element is returned.
-rmAttr ∷ ∀ m e. MonadEffect m ⇒ IsElement e ⇒ String → m e → m e
-rmAttr name mElement = do
-  element ← mElement
-  liftEffect <<< removeAttribute name $ toElement element
+    ( \(name /\ value) → setAttribute name value element
+    )
+    attributes
   pure element
 
+-- | Sets the attributes of an element. Existing attributes of the same names
+-- | are overwritten. New names create new attributes. The element is returned.
+setAttrsM ∷ ∀ e f m. Foldable f ⇒ ElementOp e ⇒ MonadEffect m ⇒ f (String /\ String) → m e → m e
+setAttrsM = bindFlipped <<< setAttrs
+
+-- | Gets the value of the named attibute.
+attr ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → e → m (Maybe String)
+attr = getAttribute
+
+-- | Gets the value of the named attibute.
+attrM ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → m e → m (Maybe String)
+attrM = bindFlipped <<< attr
+
+-- | Removes an attribute from an element. The element is returned.
+rmAttr ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → e → m e
+rmAttr name element = do
+  removeAttribute name element
+  pure element
+
+-- | Removes an attribute from an element. The element is returned.
+rmAttrM ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → m e → m e
+rmAttrM = bindFlipped <<< rmAttr
+
 -- | Creates an element, set attributes, and appends child nodes.
-el ∷ ∀ m d f1 f2. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → m D.Element
+el ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (String /\ String) → f2 (m Node) → m Element
 el tagName attributes children = do
-  elem ← asks $ liftEffect <<< createElement tagName <<< toDocument
-  (setAttrs attributes elem) # appendNodes children
+  elem ← createElement tagName =<< doc
+  (setAttrs attributes elem) # appendNodesM children
 
 -- | Calls `el` and applies the result to `nd`: `nd <<< el tagName attributes`.
-eln ∷ ∀ m d f1 f2. MonadAsk d m ⇒ MonadEffect m ⇒ IsDocument d ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (Tuple String String) → f2 (N m) → N m
-eln tagName attributes = nd <<< el tagName attributes
+eln ∷ ∀ m f1 f2. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ String → f1 (String /\ String) → f2 (m Node) → m Node
+eln = compose (compose ndM) <<< el

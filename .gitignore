@@ -7,5 +7,6 @@
 /.psc*
 /.purs*
 /.psa*
-/.spago
-/index.js
+.spago
+index.js
+dist

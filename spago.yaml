@@ -1,0 +1,25 @@
+workspace:
+  extra_packages: {}
+  package_set:
+    registry: 50.11.0
+package:
+  dependencies:
+  - arrays
+  - effect
+  - either
+  - exceptions
+  - foldable-traversable
+  - integers
+  - lists
+  - maybe
+  - numbers
+  - prelude
+  - tuples
+  - unordered-collections
+  - unsafe-coerce
+  - unsafe-reference
+  - web-cssom
+  - web-dom
+  - web-events
+  - web-html
+  name: web-chain

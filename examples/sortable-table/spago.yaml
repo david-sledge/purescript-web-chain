@@ -1,0 +1,27 @@
+package:
+  name: sortable-table
+  dependencies:
+  - prelude
+  - arrays
+  - console
+  - datetime
+  - debug
+  - effect
+  - either
+  - exceptions
+  - foldable-traversable
+  - formatters
+  - integers
+  - lists
+  - maybe
+  - now
+  - numbers
+  - tuples
+  - unordered-collections
+  - unsafe-coerce
+  - unsafe-reference
+  - web-chain
+  - web-cssom
+  - web-dom
+  - web-events
+  - web-html

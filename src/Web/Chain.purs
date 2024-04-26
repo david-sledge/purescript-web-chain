@@ -1,20 +1,7 @@
 module Web.Chain
-( module Web.Chain.Class
-, module Web.Chain.DOM
-) where
+  ( module Web.Chain.DOM
+  , module Web.Event.Class.EventTargetOp
+  ) where
 
-import Web.Chain.Class
-  ( class IsChildNode
-  , class IsDocument
-  , class IsElement
-  , class IsEventTarget
-  , class IsNode
-  , class IsParentNode
-  , toChildNode
-  , toDocument
-  , toElement
-  , toEventTarget
-  , toNode
-  , toParentNode
-  )
-import Web.Chain.DOM (N)
+import Web.Chain.DOM (appendNodes, appendNodesM, appendsNodes, appendsNodesM, attr, attrM, detach, detachM, doc, el, eln, empty, emptyM, nd, ndM, remove, removeM, rmAttr, rmAttrM, setAttrs, setAttrsM, tx, txn, (+<), (+<<), (>+), (>>+))
+import Web.Event.Class.EventTargetOp
