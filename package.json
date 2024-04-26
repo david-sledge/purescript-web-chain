@@ -21,6 +21,7 @@
 
     "example-b4-unload-event": "examples/bundle.sh b4-unload-event",
     "example-basic": "examples/bundle.sh basic",
+    "example-event-handling": "examples/bundle.sh event-handling",
     "example-dialog": "examples/bundle.sh dialog",
     "example-sortable-table": "examples/bundle.sh sortable-table",
     "example-all": "npm run -s example-b4-unload-event && npm run -s example-basic && npm run -s example-dialog && npm run -s example-sortable-table"
