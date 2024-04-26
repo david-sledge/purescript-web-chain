@@ -54,6 +54,7 @@ import Web.HTML.HTMLDivElement as HDv
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
 import Web.HTML.HTMLInputElement as HI
+import Web.HTML.HTMLSpanElement as HS
 import Web.HTML.HTMLTableCellElement as HTd
 import Web.HTML.HTMLTableRowElement as HTr
 
@@ -104,6 +105,9 @@ instance EventTargetOp HDv.HTMLDivElement where
 
 instance EventTargetOp HI.HTMLInputElement where
   toEventTarget = HI.toEventTarget
+
+instance EventTargetOp HS.HTMLSpanElement where
+  toEventTarget = HS.toEventTarget
 
 instance EventTargetOp HTd.HTMLTableCellElement where
   toEventTarget = HTd.toEventTarget

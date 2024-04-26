@@ -16,6 +16,7 @@ import Web.HTML.HTMLButtonElement as HB
 import Web.HTML.HTMLDivElement as HD
 import Web.HTML.HTMLElement as HE
 import Web.HTML.HTMLInputElement as HI
+import Web.HTML.HTMLSpanElement as HS
 import Web.HTML.HTMLTableCellElement as HTd
 import Web.HTML.HTMLTableRowElement as HTr
 
@@ -36,6 +37,9 @@ instance HTMLElementOp HD.HTMLDivElement where
 
 instance HTMLElementOp HI.HTMLInputElement where
   toHTMLElement = HI.toHTMLElement
+
+instance HTMLElementOp HS.HTMLSpanElement where
+  toHTMLElement = HS.toHTMLElement
 
 instance HTMLElementOp HTd.HTMLTableCellElement where
   toHTMLElement = HTd.toHTMLElement

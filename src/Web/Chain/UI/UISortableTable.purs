@@ -31,11 +31,11 @@ import Effect.Class (class MonadEffect, liftEffect)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.Chain (class EventTargetOp, appendNodesM, el, eln, empty, nd, ndM, onM, remove, txn)
 import Web.Chain.CSSOM (addClassesM, conceal, revealM, setCssPropM)
-import Web.Chain.HTML (td, tr)
+import Web.Chain.HTML (span, table, td, tr)
 import Web.DOM (Element, Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
 import Web.DOM.Class.NodeOp (class NodeOp, appendChild)
-import Web.HTML (HTMLElement, HTMLTableRowElement)
+import Web.HTML (HTMLSpanElement, HTMLTableRowElement)
 import Web.HTML.Class.HTMLElementOp (class HTMLElementOp)
 
 foreign import data SortableTable
@@ -65,14 +65,14 @@ type ColSpec k a f1 f2 =
 
 foreign import _setColSpecs
   ∷ ∀ k a f1 f2
-  . Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement))
+  . Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement))
   → SortableTable k a f1 f2
   → Effect Unit
 
 foreign import _getColSpecs
   ∷ ∀ k a f1 f2
   . SortableTable k a f1 f2
-  → Effect (Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement)))
+  → Effect (Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement)))
 
 foreign import _setDataTableBody
   ∷ ∀ k a f1 f2
@@ -230,24 +230,23 @@ mkSortableTable_
   => Foldable f2
   => Foldable f3
   => Foldable f4
-  => (String -> Int -> Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement)) -> String)
+  => (String -> Int -> Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement)) -> String)
   -> f3 String
   -> f4 (String /\ ColSpec k a f1 f2)
   -> m (SortableTable k a f1 f2)
 mkSortableTable_ f classNames colSpecs = do
   tr ← el "tr" [] []
   tableBody ← el "tbody" [] []
-  table ←
-    unsafeCoerce <$> el "table" []
-      [ eln "thead" []
-          [ nd tr
-          ]
-      , nd tableBody
-      ] # addClassesM classNames
+  tbl ← unsafeCoerce <$> table []
+    [ eln "thead" []
+        [ nd tr
+        ]
+    , nd tableBody
+    ] # addClassesM classNames
   (sortOrder /\ newColSpecs) ←
     foldWithItemCountM
       ( \col (sortOrder /\ colSpecs') (name /\ colSpec) → do
-          sortDirUi <- el "span" [] [ txn "\x25b2" ]
+          sortDirUi <- span [] [ txn "\x25b2" ]
           el
             "th"
             []
@@ -255,8 +254,8 @@ mkSortableTable_ f classNames colSpecs = do
             # addClassesM (snd colSpec.heading)
             # onM "click"
                 ( const do
-                    sortOrder' ← getSortOrder table
-                    let changeSort sort = void $ changeSortOrder sort table
+                    sortOrder' ← getSortOrder tbl
+                    let changeSort sort = void $ changeSortOrder sort tbl
                     maybe
                       (changeSort [ name /\ true ])
                       ( \(name' /\ isAsc) →
@@ -285,16 +284,16 @@ mkSortableTable_ f classNames colSpecs = do
                 )
             >>= flip appendChild tr
           let name' = f name col colSpecs'
-          pure (snoc sortOrder (name' /\ true) /\ snoc colSpecs' (name' /\ (colSpec /\ unsafeCoerce sortDirUi)))
+          pure (snoc sortOrder (name' /\ true) /\ snoc colSpecs' (name' /\ (colSpec /\ sortDirUi)))
       )
       ([] /\ [])
       colSpecs
   tableData ← MM.new
-  liftEffect $ _setColSpecs newColSpecs table
-  liftEffect $ _setDataTableBody tableBody table
-  liftEffect $ _setSortOrder sortOrder table
-  liftEffect $ _setTableData tableData table
-  pure table
+  liftEffect $ _setColSpecs newColSpecs tbl
+  liftEffect $ _setDataTableBody tableBody tbl
+  liftEffect $ _setSortOrder sortOrder tbl
+  liftEffect $ _setTableData tableData tbl
+  pure tbl
 
 mkSortableTable
   ∷ ∀ m k a f1 f2 f3 f4
@@ -345,11 +344,11 @@ updateRows
   ⇒ Ord a
   ⇒ Foldable f1
   ⇒ Foldable f3
-  ⇒ ( Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement))
+  ⇒ ( Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement))
       → (HTMLTableRowElement /\ M.HashMap String a)
       → b
     )
-  → ( Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement))
+  → ( Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement))
       → c
       → M.HashMap String a
     )

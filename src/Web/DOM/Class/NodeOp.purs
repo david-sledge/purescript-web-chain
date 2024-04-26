@@ -51,6 +51,7 @@ import Web.HTML.HTMLElement (HTMLElement)
 import Web.HTML.HTMLElement as HE
 import Web.HTML.HTMLInputElement (HTMLInputElement)
 import Web.HTML.HTMLInputElement as HI
+import Web.HTML.HTMLSpanElement as HS
 import Web.HTML.HTMLTableCellElement as HTd
 import Web.HTML.HTMLTableRowElement as HTr
 
@@ -93,6 +94,9 @@ instance NodeOp HTMLDivElement where
 
 instance NodeOp HTMLInputElement where
   toNode = HI.toNode
+
+instance NodeOp HS.HTMLSpanElement where
+  toNode = HS.toNode
 
 instance NodeOp HTd.HTMLTableCellElement where
   toNode = HTd.toNode

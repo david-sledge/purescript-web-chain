@@ -4,7 +4,6 @@ module Main
 
 import Prelude
 
-import Data.Array (snoc)
 import Data.DateTime.Instant (Instant, toDateTime)
 import Data.Either (either)
 import Data.Formatter.DateTime (formatDateTime)
@@ -15,11 +14,10 @@ import Effect (Effect)
 import Effect.Class (liftEffect)
 import Effect.Exception (error, throwException)
 import Effect.Now (now)
-import Unsafe.Coerce (unsafeCoerce)
-import Web.Chain.DOM (doc, el, nd, ndM, txn, (+<))
+import Web.Chain.DOM (doc, nd, ndM, txn, (+<))
 import Web.Chain.Event (onChange, onReady_)
+import Web.Chain.HTML (checkbox)
 import Web.Chain.UI.UISortableTable (changeSortOrder, getSortOrder, mkSortableTable, updateRowsByColName)
-import Web.HTML (HTMLInputElement)
 import Web.HTML.HTMLDocument (body)
 import Web.HTML.HTMLInputElement (checked)
 
@@ -75,21 +73,14 @@ main = onReady_ $ \_ → do
                 /\
                   { classNames: [ "text-center" ]
                   , formatter: \key mBool table → do
-                      (checkbox ∷ HTMLInputElement) ← unsafeCoerce <$> el "input"
-                        ( let
-                            attrs = [ "type" /\ "checkbox" ]
-                          in
-                            if maybe false withColBool mBool then snoc attrs ("checked" /\ "checked")
-                            else attrs
-                        )
-                        []
-                      ndM $ checkbox # onChange
+                      chkbx ← checkbox (maybe false withColBool mBool) Nothing
+                      ndM $ chkbx # onChange
                         ( \_ → void $ getSortOrder table >>=
                             ( \_ →
                                 updateRowsByColName
                                   [ ( key /\ maybe (pure Nothing)
                                         ( \dat →
-                                            Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked checkbox
+                                            Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked chkbx
                                         )
                                     )
                                   ]

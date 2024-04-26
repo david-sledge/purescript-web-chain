@@ -1,6 +1,8 @@
 -- | Functions for specific types of HTML elements.
 module Web.Chain.HTML
   ( button
+  , check
+  , checkbox
   , disable
   , div
   , enable
@@ -9,13 +11,16 @@ module Web.Chain.HTML
   , minLen
   , setAutocomplete
   , setLenLimits
+  , span
   , table
   , td
   , textField
   , tr
+  , uncheck
   , val
   , valM
-  ) where
+  )
+  where
 
 import Prelude
 
@@ -39,6 +44,7 @@ import Web.Event.Event (Event)
 import Web.HTML (HTMLButtonElement, HTMLInputElement)
 import Web.HTML.HTMLButtonElement as HB
 import Web.HTML.HTMLDivElement as HD
+import Web.HTML.HTMLSpanElement as HS
 import Web.HTML.HTMLInputElement (value)
 import Web.HTML.HTMLInputElement as HI
 import Web.HTML.HTMLTableCellElement as HTD
@@ -134,28 +140,52 @@ val input = liftEffect $ value input
 valM ∷ ∀ m. MonadEffect m ⇒ m HTMLInputElement → m String
 valM = bindFlipped val
 
+testConversion :: forall m el. MonadEffect m => String -> String -> Maybe el -> m el
+testConversion tag typeName = maybe (liftEffect <<< throwException $ error $ "'Web.Chain.DOM.el \"" <> tag <>"\"' did not produce " <> typeName) pure
+
 -- | Create a button.
-button ∷ ∀ f m a. MonadEffect m ⇒ Foldable f ⇒ f (m Node) → (Event → Effect a) → m HTMLButtonElement
-button childNodesM click = do
-  element ← el "button" Nil childNodesM # onM "click" click
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"button\" click' did not produce an HTMLButtonElement") pure $ HB.fromElement element
+button ∷ ∀ f m a. MonadEffect m ⇒ Foldable f ⇒ f (m Node) → Maybe (Event → Effect a) → m HTMLButtonElement
+button childNodesM mClick =
+  el "button" Nil childNodesM # maybe identity (onM "click") mClick >>=
+    testConversion "button" "HTMLButtonElement" <<< HB.fromElement
 
 div ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HD.HTMLDivElement
-div attributes children = do
-  element ← el "div" attributes children
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"div\"' did not produce an HTMLDivElement") pure $ HD.fromElement element
+div attributes children =
+  el "div" attributes children >>=
+    testConversion "div" "HTMLDivElement" <<< HD.fromElement
+
+span ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HS.HTMLSpanElement
+span attributes children =
+  el "span" attributes children >>=
+    testConversion "span" "HTMLSpanElement" <<< HS.fromElement
 
 tr ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTR.HTMLTableRowElement
-tr attributes children = do
-  element ← el "tr" attributes children
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"tr\"' did not produce an HTMLTableRowElement") pure $ HTR.fromElement element
+tr attributes children =
+  el "tr" attributes children >>=
+    testConversion "tr" "HTMLTableRowElement" <<< HTR.fromElement
 
 td ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTD.HTMLTableCellElement
-td attributes children = do
-  element ← el "td" attributes children
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"td\"' did not produce an HTMLTableCellElement") pure $ HTD.fromElement element
+td attributes children =
+  el "td" attributes children >>=
+    testConversion "td" "HTMLTableCellElement" <<< HTD.fromElement
 
 table ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HT.HTMLTableElement
-table attributes children = do
-  element ← el "tr" attributes children
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"table\"' did not produce an HTMLTableElement") pure $ HT.fromElement element
+table attributes children =
+  el "table" attributes children >>=
+    testConversion "table" "HTMLTableElement" <<< HT.fromElement
+
+check :: forall m. MonadEffect m => HTMLInputElement -> m HTMLInputElement
+check checkbx = do
+  liftEffect $ HI.setChecked true checkbx
+  pure checkbx
+
+uncheck :: forall m. MonadEffect m => HTMLInputElement -> m HTMLInputElement
+uncheck checkbx = do
+  liftEffect $ HI.setChecked false checkbx
+  pure checkbx
+
+-- | Create a checkbox.
+checkbox ∷ ∀ m a. MonadEffect m ⇒ Boolean → Maybe (Event → Effect a) → m HTMLInputElement
+checkbox isChecked mChange =
+  el "input" [ "type" /\ "checkbox" ] [] # maybe identity (onM "change") mChange >>=
+    testConversion "button" "HTMLInputElement" <<< HI.fromElement >>= if isChecked then check else uncheck
