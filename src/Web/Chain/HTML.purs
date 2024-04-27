@@ -15,6 +15,7 @@ module Web.Chain.HTML
   , table
   , td
   , textField
+  , th
   , tr
   , uncheck
   , val
@@ -168,6 +169,11 @@ td ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String
 td attributes children =
   el "td" attributes children >>=
     testConversion "td" "HTMLTableCellElement" <<< HTD.fromElement
+
+th ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTD.HTMLTableCellElement
+th attributes children =
+  el "th" attributes children >>=
+    testConversion "th" "HTMLTableCellElement" <<< HTD.fromElement
 
 table ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HT.HTMLTableElement
 table attributes children =

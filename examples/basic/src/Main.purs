@@ -23,60 +23,58 @@ snippetFromPurescriptLandingPage = do
   win <- window
   htmlDoc <- document win
   let doc = toDocument htmlDoc
-  div <- E.toNode <$> createElement "div" doc
-  h3 <- E.toNode <$> createElement "h3" doc
+      newElem tag = E.toNode <$> createElement tag doc
+      newText string = T.toNode <$> createTextNode string doc
+  div <- newElem "div"
+  h3 <- newElem "h3"
   appendChild h3 div
-  text <- T.toNode <$> createTextNode "Benefits" doc
+  text <- newText "Benefits"
   appendChild text h3
-  let newUl = E.toNode <$> createElement "ul" doc
+  let newUl = newElem "ul"
   ulOuter <- newUl
   appendChild ulOuter div
-  let newLi = E.toNode <$> createElement "li" doc
+  let newLi = newElem "li"
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- T.toNode <$> createTextNode "Compile to readable JavaScript and reuse existing JavaScript code easily" doc
+  text <- newText "Compile to readable JavaScript and reuse existing JavaScript code easily"
   appendChild text liOuter
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- T.toNode <$> createTextNode "An extensive collection of libraries for development of web applications, web servers, apps and more" doc
+  text <- newText "An extensive collection of libraries for development of web applications, web servers, apps and more"
   appendChild text liOuter
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- T.toNode <$> createTextNode "Excellent tooling and editor support with instant rebuilds" doc
+  text <- newText "Excellent tooling and editor support with instant rebuilds"
   appendChild text liOuter
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- T.toNode <$> createTextNode "An active community with many learning resources" doc
+  text <- newText "An active community with many learning resources"
   appendChild text liOuter
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- T.toNode <$> createTextNode "An active community with many learning resources" doc
-  appendChild text liOuter
-  liOuter <- newLi
-  appendChild liOuter ulOuter
-  text <- T.toNode <$> createTextNode "Build real-world applications using functional techniques and expressive types, such as:" doc
+  text <- newText "Build real-world applications using functional techniques and expressive types, such as:"
   appendChild text liOuter
   ulInner <- newUl
   appendChild ulInner liOuter
   liInner <- newLi
   appendChild liInner ulInner
-  text <- T.toNode <$> createTextNode "Algebraic data types and pattern matching" doc
+  text <- newText "Algebraic data types and pattern matching"
   appendChild text liInner
   liInner <- newLi
   appendChild liInner ulInner
-  text <- T.toNode <$> createTextNode "Row polymorphism and extensible records" doc
+  text <- newText "Row polymorphism and extensible records"
   appendChild text liInner
   liInner <- newLi
   appendChild liInner ulInner
-  text <- T.toNode <$> createTextNode "Higher kinded types" doc
+  text <- newText "Higher kinded types"
   appendChild text liInner
   liInner <- newLi
   appendChild liInner ulInner
-  text <- T.toNode <$> createTextNode "Type classes with functional dependencies" doc
+  text <- newText "Type classes with functional dependencies"
   appendChild text liInner
   liInner <- newLi
   appendChild liInner ulInner
-  text <- T.toNode <$> createTextNode "Higher-rank polymorphism" doc
+  text <- newText "Higher-rank polymorphism"
   appendChild text liInner
   pure div
 

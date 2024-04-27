@@ -1,6 +1,6 @@
 # Web Chain
 
-Web Chain is a library to simplify DOM manipulation. To create the following:
+Web Chain is a library to simplify DOM manipulation. To create the following page snippet (snagged from the landing page of the [PureScript web site](https://www.purescript.org/)):
 
 ```html
 <div>
@@ -32,60 +32,58 @@ snippetFromPurescriptLandingPage = do
   win <- window
   htmlDoc <- document win
   let doc = toDocument htmlDoc
-  div <- Web.DOM.Element.toNode <$> createElement "div" doc
-  h3 <- Web.DOM.Element.toNode <$> createElement "h3" doc
+      newElem tag = Web.DOM.Element.toNode <$> createElement tag doc
+      newText string = Web.DOM.Text.toNode <$> createTextNode string doc
+  div <- newElem "div"
+  h3 <- newElem "h3"
   appendChild h3 div
-  text <- Web.DOM.Text.toNode <$> createTextNode "Benefits" doc
+  text <- newText "Benefits"
   appendChild text h3
-  let newUl = Web.DOM.Element.toNode <$> createElement "ul" doc
+  let newUl = newElem "ul"
   ulOuter <- newUl
   appendChild ulOuter div
-  let newLi = Web.DOM.Element.toNode <$> createElement "li" doc
+  let newLi = newElem "li"
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- Web.DOM.Text.toNode <$> createTextNode "Compile to readable JavaScript and reuse existing JavaScript code easily" doc
+  text <- newText "Compile to readable JavaScript and reuse existing JavaScript code easily"
   appendChild text liOuter
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- Web.DOM.Text.toNode <$> createTextNode "An extensive collection of libraries for development of web applications, web servers, apps and more" doc
+  text <- newText "An extensive collection of libraries for development of web applications, web servers, apps and more"
   appendChild text liOuter
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- Web.DOM.Text.toNode <$> createTextNode "Excellent tooling and editor support with instant rebuilds" doc
+  text <- newText "Excellent tooling and editor support with instant rebuilds"
   appendChild text liOuter
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- Web.DOM.Text.toNode <$> createTextNode "An active community with many learning resources" doc
+  text <- newText "An active community with many learning resources"
   appendChild text liOuter
   liOuter <- newLi
   appendChild liOuter ulOuter
-  text <- Web.DOM.Text.toNode <$> createTextNode "An active community with many learning resources" doc
-  appendChild text liOuter
-  liOuter <- newLi
-  appendChild liOuter ulOuter
-  text <- Web.DOM.Text.toNode <$> createTextNode "Build real-world applications using functional techniques and expressive types, such as:" doc
+  text <- newText "Build real-world applications using functional techniques and expressive types, such as:"
   appendChild text liOuter
   ulInner <- newUl
   appendChild ulInner liOuter
   liInner <- newLi
   appendChild liInner ulInner
-  text <- Web.DOM.Text.toNode <$> createTextNode "Algebraic data types and pattern matching" doc
+  text <- newText "Algebraic data types and pattern matching"
   appendChild text liInner
   liInner <- newLi
   appendChild liInner ulInner
-  text <- Web.DOM.Text.toNode <$> createTextNode "Row polymorphism and extensible records" doc
+  text <- newText "Row polymorphism and extensible records"
   appendChild text liInner
   liInner <- newLi
   appendChild liInner ulInner
-  text <- Web.DOM.Text.toNode <$> createTextNode "Higher kinded types" doc
+  text <- newText "Higher kinded types"
   appendChild text liInner
   liInner <- newLi
   appendChild liInner ulInner
-  text <- Web.DOM.Text.toNode <$> createTextNode "Type classes with functional dependencies" doc
+  text <- newText "Type classes with functional dependencies"
   appendChild text liInner
   liInner <- newLi
   appendChild liInner ulInner
-  text <- Web.DOM.Text.toNode <$> createTextNode "Higher-rank polymorphism" doc
+  text <- newText "Higher-rank polymorphism"
   appendChild text liInner
   pure div
 ```
@@ -93,9 +91,9 @@ snippetFromPurescriptLandingPage = do
 Web Chain condenses it to:
 
 ```purescript
-snippetFromPurescriptLandingPageWithWebChain :: Effect Element
+snippetFromPurescriptLandingPageWithWebChain :: Effect Node
 snippetFromPurescriptLandingPageWithWebChain =
-  el "div" []
+  eln "div" []
     [ eln "h3" [] [ txn "Benefits" ]
 
     , eln "ul" []

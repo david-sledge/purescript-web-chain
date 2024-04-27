@@ -153,7 +153,7 @@ main = onReady_ $ \_ → do
             >>= updateRowsByColName
               [ (1 /\ \_ → pure $ Nothing)
               ]
-            >>= changeSortOrder [ "string" /\ true ]
+            -- >>= changeSortOrder [ "string" /\ true ]
             >>= updateRowsByColName
               [ (1 /\ \_ → pure <<< Just $ M.fromArray
                     [ "bool" /\ ColBool false
