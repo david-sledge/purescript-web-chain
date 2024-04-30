@@ -4,7 +4,7 @@ module Main
 
 import Prelude
 
-import Data.Maybe (maybe)
+import Data.Maybe (Maybe (Just), maybe)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (liftEffect)
@@ -49,8 +49,8 @@ main = onReady_ $ \_ →
         _ ← bodyElem +<
           [ nd dialog
           , eln "div" []
-              [ ndM $ button [ txn "Update details" ]
-                  ( const $ do
+              [ ndM $ button [] [ txn "Update details" ]
+                  ( Just $ const \ _ -> do
                       showModal dialog
                       openCheck dialog
                   )

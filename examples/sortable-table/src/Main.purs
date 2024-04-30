@@ -73,9 +73,8 @@ main = onReady_ $ \_ → do
                 /\
                   { classNames: [ "text-center" ]
                   , formatter: \key mBool table → do
-                      chkbx ← checkbox (maybe false withColBool mBool) Nothing
-                      ndM $ chkbx # onChange
-                        ( \_ → void $ getSortOrder table >>=
+                      ndM $ checkbox [] (maybe false withColBool mBool) (Just \ chkbx ->
+                        ( \_ → getSortOrder table >>=
                             ( \_ →
                                 updateRowsByColName
                                   [ ( key /\ maybe (pure Nothing)
@@ -86,7 +85,7 @@ main = onReady_ $ \_ → do
                                   ]
                                   table
                             )
-                        ) --}
+                        )) --}
                   , heading: (txn "Boolean Column" /\ [ "text-center" ])
                   }
             , "string"

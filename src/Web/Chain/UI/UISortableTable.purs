@@ -251,14 +251,13 @@ mkSortableTable_ f classNames colSpecs = do
           th
             []
             [ ndM $ div []
-                [ ndM $ div [] [ liftEffect $ fst colSpec.heading ] -- # addClassesM (snd colSpec.heading)
+                [ ndM $ div [] [ liftEffect $ fst colSpec.heading ]
                 , ndM $ span [] [ txn " " ] # setCssPropM "white-space" "pre"
                 , nd sortDirUi
                 ]
                 # setCssM [ "display" /\ "inline-flex" ]
             ]
             # addClassesM (snd colSpec.heading)
-            -- # setCssM [ "display" /\ "inline-flex", "align-items" /\ "flex-end" ]
             # onM "click"
                 ( const do
                     sortOrder' ← getSortOrder tbl

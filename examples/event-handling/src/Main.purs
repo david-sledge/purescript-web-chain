@@ -4,7 +4,7 @@ module Main
 
 import Prelude
 
-import Data.Maybe (maybe)
+import Data.Maybe (Maybe(Just), maybe)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (liftEffect)
@@ -53,11 +53,9 @@ main = onReady_ $ \_ → do
                     )
                   # changeM
               , nd welcomeMessageArea
-              , ndM $ button [ txn "Stop Greeting Me" ]
-                ( const do
+              , ndM $ button [] [ txn "Stop Greeting Me" ] <<< Just <<< const $ const do
                     void $ allOff nameField
                     empty welcomeMessageArea
-                )
               ]
           ]
         pure unit

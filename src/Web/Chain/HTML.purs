@@ -37,10 +37,10 @@ import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (attrM, el, rmAttrM, setAttrsM)
+import Web.Chain.DOM (attrM, el, rmAttrM, setAttrs, setAttrsM)
 import Web.DOM (Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
-import Web.Event.Class.EventTargetOp (onM)
+import Web.Event.Class.EventTargetOp (on, onM)
 import Web.Event.Event (Event)
 import Web.HTML (HTMLButtonElement, HTMLInputElement)
 import Web.HTML.HTMLButtonElement as HB
@@ -145,10 +145,11 @@ testConversion :: forall m el. MonadEffect m => String -> String -> Maybe el -> 
 testConversion tag typeName = maybe (liftEffect <<< throwException $ error $ "'Web.Chain.DOM.el \"" <> tag <>"\"' did not produce " <> typeName) pure
 
 -- | Create a button.
-button ∷ ∀ f m a. MonadEffect m ⇒ Foldable f ⇒ f (m Node) → Maybe (Event → Effect a) → m HTMLButtonElement
-button childNodesM mClick =
-  el "button" Nil childNodesM # maybe identity (onM "click") mClick >>=
+button ∷ ∀ m f1 f2 a. Bind m => MonadEffect m => Foldable f1 => Foldable f2 => f1 (String /\ String) -> f2 (m Node) -> Maybe (HTMLButtonElement -> Event -> Effect a) -> m HTMLButtonElement
+button attributes childNodesM mClick = do
+  btn <- el "button" attributes childNodesM >>=
     testConversion "button" "HTMLButtonElement" <<< HB.fromElement
+  btn # maybe pure (on "click" <<< (#) btn) mClick
 
 div ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HD.HTMLDivElement
 div attributes children =
@@ -191,7 +192,8 @@ uncheck checkbx = do
   pure checkbx
 
 -- | Create a checkbox.
-checkbox ∷ ∀ m a. MonadEffect m ⇒ Boolean → Maybe (Event → Effect a) → m HTMLInputElement
-checkbox isChecked mChange =
-  el "input" [ "type" /\ "checkbox" ] [] # maybe identity (onM "change") mChange >>=
+-- checkbox ∷ ∀ m f a. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Boolean → Maybe (HTMLInputElement → Event → Effect a) → m HTMLInputElement
+checkbox attributes isChecked mChange = do
+  chk <- el "input" attributes [] >>=
     testConversion "button" "HTMLInputElement" <<< HI.fromElement >>= if isChecked then check else uncheck
+  chk # maybe pure (on "change" <<< (#) chk) mChange # setAttrsM [ "type" /\ "checkbox" ]
