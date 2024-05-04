@@ -30,7 +30,7 @@ import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Unsafe.Coerce (unsafeCoerce)
 import Web.Chain (class EventTargetOp, appendNodesM, el, eln, empty, nd, ndM, onM, remove, txn)
-import Web.Chain.CSSOM (addClassesM, conceal, revealM, setCssM, setCssPropM)
+import Web.Chain.CSSOM (classAttr, conceal, revealM, setCssPropM, styleAttr)
 import Web.Chain.HTML (div, span, table, td, th, tr)
 import Web.DOM (Element, Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
@@ -237,27 +237,24 @@ mkSortableTable_
 mkSortableTable_ f classNames colSpecs = do
   tRow ← tr [] []
   tableBody ← el "tbody" [] []
-  tbl ← unsafeCoerce <$> table []
+  tbl ← unsafeCoerce <$> table ( [] # classAttr classNames )
     [ eln "thead" []
         [ nd tRow
         ]
     , nd tableBody
-    ] # addClassesM classNames
+    ]
   (sortOrder /\ newColSpecs) ←
     foldWithItemCountM
       ( \col (sortOrder /\ colSpecs') (name /\ colSpec) → do
-          sortDirUi <- span [] [ txn "\x25b2" ]
-            # setCssPropM "opacity" (show $ 0.9 / (pow 2.0 $ toNumber col) + 0.1)
+          sortDirUi <- span ( [] # styleAttr ["opacity" /\ (show $ 0.9 / (pow 2.0 $ toNumber col) + 0.1)] ) [ txn "\x25b2" ]
           th
             []
-            [ ndM $ div []
+            [ ndM $ div ([] # classAttr (snd colSpec.heading) # styleAttr [ "display" /\ "inline-flex" ])
                 [ ndM $ div [] [ liftEffect $ fst colSpec.heading ]
-                , ndM $ span [] [ txn " " ] # setCssPropM "white-space" "pre"
+                , ndM $ span ( [] # styleAttr ["white-space" /\ "pre"] ) [ txn " " ]
                 , nd sortDirUi
                 ]
-                # setCssM [ "display" /\ "inline-flex" ]
             ]
-            # addClassesM (snd colSpec.heading)
             # onM "click"
                 ( const do
                     sortOrder' ← getSortOrder tbl
@@ -267,7 +264,7 @@ mkSortableTable_ f classNames colSpecs = do
                       ( \(name' /\ isAsc) →
                           if name == name'
                           -- when the column selected is already the primary sort column,
-                          -- whether it sorts ascending or descending is flipped
+                          -- the ascending/descending indicator is flipped
                           then changeSort <<< cons (name /\ not isAsc) $ drop 1 sortOrder'
                           -- otherwise, the clicked column is becomes the primary sort column
                           -- without chaning ascending or descending
@@ -378,9 +375,8 @@ updateRows f g updateFs table = do
                       snoc acc
                         ( ndM $
                             td
-                              []
+                              ( [] # classAttr colSpec.classNames )
                               [ liftEffect $ colSpec.formatter key (M.lookup name newRowData) table ]
-                              # addClassesM colSpec.classNames
                         )
                   )
                   []

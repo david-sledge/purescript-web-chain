@@ -50,21 +50,39 @@ mkTabPanes
   → TabPaneClassNames f2 f3 f4 f5 f6
   → m (Element /\ HTMLDivElement)
 mkTabPanes details classNames = do
-  tabs ← el "nav" [ "role" /\ "tablist" ] [] # C.addClassesM classNames.tabsContainer
+  tabs ← el "nav" ( [ "role" /\ "tablist" ] # C.classAttr classNames.tabsContainer ) []
   tabPanePairArray ← A.new
-  contentPanes ← H.div [] [] # C.addClassesM classNames.panesContainer
+  contentPanes ← H.div ( [] # C.classAttr classNames.panesContainer ) []
   traverse_
     ( \detail → do
         hasChildren ← hasChildNodes tabs
         let
           paneId = "nav-" <> detail.label
           tabId = paneId <> "-tab"
-        contentUi ← H.div [ "aria-labelledby" /\ tabId, "id" /\ paneId, "role" /\ "tabpanel", "tabindex" /\ "0" ] [ detail.content ]
-          # C.addClassesM classNames.panes
+        contentUi ← H.div
+            ( [ "aria-labelledby" /\ tabId
+              , "id" /\ paneId
+              , "role" /\ "tabpanel"
+              , "tabindex" /\ "0"
+              ]
+              # C.classAttr classNames.panes
+            )
+            [ detail.content ]
           # if hasChildren then C.hideM else C.showM
         appendChild contentUi $ toNode contentPanes
-        tabUi ← el "button" [ "aria-controls" /\ paneId, "aria-selected" /\ (if hasChildren then "false" else "true"), "data-bs-target" /\ ("#nav-" <> detail.label), "data-bs-toggle" /\ "tab", "id" /\ tabId, "role" /\ "tab", "type" /\ "button" ] [ detail.tab ]
-          # C.addClassesM classNames.allTabs
+        tabUi ← el
+            "button"
+            ( [ "aria-controls" /\ paneId
+              , "aria-selected" /\ (if hasChildren then "false" else "true")
+              , "data-bs-target" /\ ("#nav-" <> detail.label)
+              , "data-bs-toggle" /\ "tab"
+              , "id" /\ tabId
+              , "role" /\ "tab"
+              , "type" /\ "button"
+              ]
+              # C.classAttr classNames.allTabs
+            )
+            [ detail.tab ]
           # onM "click" \_ → do
               -- iterate through content panes
               traverse_

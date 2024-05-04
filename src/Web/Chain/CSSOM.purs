@@ -3,6 +3,7 @@
 module Web.Chain.CSSOM
   ( addClasses
   , addClassesM
+  , classAttr
   , collapse
   , collapseM
   , conceal
@@ -17,12 +18,15 @@ module Web.Chain.CSSOM
   , setCssPropM
   , show
   , showM
-  ) where
+  , styleAttr
+  )
+  where
 
 import Prelude hiding (add, show)
 
 import Control.Bind (bindFlipped)
-import Data.Foldable (class Foldable, traverse_)
+import Data.Array (snoc)
+import Data.Foldable (class Foldable, foldl, intercalate, traverse_)
 import Data.Maybe (Maybe(..))
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
@@ -118,3 +122,9 @@ addClasses classes n = do
 
 addClassesM :: forall m n f. MonadEffect m => ElementOp n => Foldable f => f String -> m n -> m n
 addClassesM = bindFlipped <<< addClasses
+
+classAttr :: forall f. Foldable f => f String -> Array (String /\ String) -> Array (String /\ String)
+classAttr classNames attrs = snoc attrs ("class" /\ intercalate " " classNames)
+
+styleAttr :: forall f. Foldable f => f (String /\ String) -> Array (String /\ String) -> Array (String /\ String)
+styleAttr properties attrs = snoc attrs ("style" /\ foldl (\ acc (name /\ val) -> acc <> name <> ":" <> val <> ";") "" properties)
