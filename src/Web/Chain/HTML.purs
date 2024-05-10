@@ -20,8 +20,7 @@ module Web.Chain.HTML
   , uncheck
   , val
   , valM
-  )
-  where
+  ) where
 
 import Prelude
 
@@ -52,14 +51,14 @@ import Web.HTML.HTMLTableCellElement as HTD
 import Web.HTML.HTMLTableElement as HT
 import Web.HTML.HTMLTableRowElement as HTR
 
+testConversion ∷ ∀ m el. MonadEffect m ⇒ String → String → Maybe el → m el
+testConversion tag typeName = maybe (liftEffect <<< throwException $ error $ "'Web.Chain.DOM.el \"" <> tag <> "\"' did not produce " <> typeName) pure
+
 -- | Create a plain ol' input field of type text with a default value.
 textField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → String → m HTMLInputElement
 textField attrs defaultValue =
-  maybe
-    (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"input\" val' did not produce an HTMLInputElement")
-    pure <<<
-    HI.fromElement =<<
-    (el "input" attrs [] # setAttrsM [ "type" /\ "text", "value" /\ defaultValue ])
+  (el "input" attrs [] # setAttrsM [ "type" /\ "text", "value" /\ defaultValue ])
+    >>= testConversion "input" "HTMLInputElement" <<< HI.fromElement
 
 {-
 text field functions:
@@ -141,13 +140,10 @@ val input = liftEffect $ value input
 valM ∷ ∀ m. MonadEffect m ⇒ m HTMLInputElement → m String
 valM = bindFlipped val
 
-testConversion :: forall m el. MonadEffect m => String -> String -> Maybe el -> m el
-testConversion tag typeName = maybe (liftEffect <<< throwException $ error $ "'Web.Chain.DOM.el \"" <> tag <>"\"' did not produce " <> typeName) pure
-
 -- | Create a button.
-button ∷ ∀ m f1 f2 a. Bind m => MonadEffect m => Foldable f1 => Foldable f2 => f1 (String /\ String) -> f2 (m Node) -> Maybe (HTMLButtonElement -> Event -> Effect a) -> m HTMLButtonElement
+button ∷ ∀ m f1 f2 a. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → Maybe (HTMLButtonElement → Event → Effect a) → m HTMLButtonElement
 button attributes childNodesM mClick = do
-  btn <- el "button" attributes childNodesM >>=
+  btn ← el "button" attributes childNodesM >>=
     testConversion "button" "HTMLButtonElement" <<< HB.fromElement
   btn # maybe pure (on "click" <<< (#) btn) mClick
 
@@ -181,19 +177,20 @@ table attributes children =
   el "table" attributes children >>=
     testConversion "table" "HTMLTableElement" <<< HT.fromElement
 
-check :: forall m. MonadEffect m => HTMLInputElement -> m HTMLInputElement
+check ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m HTMLInputElement
 check checkbx = do
   liftEffect $ HI.setChecked true checkbx
   pure checkbx
 
-uncheck :: forall m. MonadEffect m => HTMLInputElement -> m HTMLInputElement
+uncheck ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m HTMLInputElement
 uncheck checkbx = do
   liftEffect $ HI.setChecked false checkbx
   pure checkbx
 
 -- | Create a checkbox.
-checkbox ∷ forall m f a. MonadEffect m => Foldable f => f (String /\ String) -> Boolean -> Maybe (HTMLInputElement -> Event -> Effect a) -> m HTMLInputElement
+checkbox ∷ ∀ m f a. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Boolean → Maybe (HTMLInputElement → Event → Effect a) → m HTMLInputElement
 checkbox attributes isChecked mChange = do
-  chk <- el "input" attributes [] >>=
-    testConversion "input" "HTMLInputElement" <<< HI.fromElement >>= if isChecked then check else uncheck
+  chk ← el "input" attributes []
+    >>= testConversion "input" "HTMLInputElement" <<< HI.fromElement
+    >>= if isChecked then check else uncheck
   chk # maybe pure (on "change" <<< (#) chk) mChange # setAttrsM [ "type" /\ "checkbox" ]

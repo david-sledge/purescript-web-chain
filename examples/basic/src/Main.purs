@@ -18,86 +18,88 @@ import Web.HTML (window)
 import Web.HTML.Window (document)
 import Web.HTML.HTMLDocument (body, toDocument)
 
-snippetFromPurescriptLandingPage :: Effect Node
+snippetFromPurescriptLandingPage ∷ Effect Node
 snippetFromPurescriptLandingPage = do
-  win <- window
-  htmlDoc <- document win
-  let doc = toDocument htmlDoc
-      newElem tag = E.toNode <$> createElement tag doc
-      newText string = T.toNode <$> createTextNode string doc
-  div <- newElem "div"
-  h3 <- newElem "h3"
+  win ← window
+  htmlDoc ← document win
+  let
+    doc = toDocument htmlDoc
+    newElem tag = E.toNode <$> createElement tag doc
+    newText string = T.toNode <$> createTextNode string doc
+  div ← newElem "div"
+  h3 ← newElem "h3"
   appendChild h3 div
-  text <- newText "Benefits"
+  text ← newText "Benefits"
   appendChild text h3
   let newUl = newElem "ul"
-  ulOuter <- newUl
+  ulOuter ← newUl
   appendChild ulOuter div
   let newLi = newElem "li"
-  liOuter <- newLi
+  liOuter ← newLi
   appendChild liOuter ulOuter
-  text <- newText "Compile to readable JavaScript and reuse existing JavaScript code easily"
+  text ← newText "Compile to readable JavaScript and reuse existing JavaScript code easily"
   appendChild text liOuter
-  liOuter <- newLi
+  liOuter ← newLi
   appendChild liOuter ulOuter
-  text <- newText "An extensive collection of libraries for development of web applications, web servers, apps and more"
+  text ← newText "An extensive collection of libraries for development of web applications, web servers, apps and more"
   appendChild text liOuter
-  liOuter <- newLi
+  liOuter ← newLi
   appendChild liOuter ulOuter
-  text <- newText "Excellent tooling and editor support with instant rebuilds"
+  text ← newText "Excellent tooling and editor support with instant rebuilds"
   appendChild text liOuter
-  liOuter <- newLi
+  liOuter ← newLi
   appendChild liOuter ulOuter
-  text <- newText "An active community with many learning resources"
+  text ← newText "An active community with many learning resources"
   appendChild text liOuter
-  liOuter <- newLi
+  liOuter ← newLi
   appendChild liOuter ulOuter
-  text <- newText "Build real-world applications using functional techniques and expressive types, such as:"
+  text ← newText "Build real-world applications using functional techniques and expressive types, such as:"
   appendChild text liOuter
-  ulInner <- newUl
+  ulInner ← newUl
   appendChild ulInner liOuter
-  liInner <- newLi
+  liInner ← newLi
   appendChild liInner ulInner
-  text <- newText "Algebraic data types and pattern matching"
+  text ← newText "Algebraic data types and pattern matching"
   appendChild text liInner
-  liInner <- newLi
+  liInner ← newLi
   appendChild liInner ulInner
-  text <- newText "Row polymorphism and extensible records"
+  text ← newText "Row polymorphism and extensible records"
   appendChild text liInner
-  liInner <- newLi
+  liInner ← newLi
   appendChild liInner ulInner
-  text <- newText "Higher kinded types"
+  text ← newText "Higher kinded types"
   appendChild text liInner
-  liInner <- newLi
+  liInner ← newLi
   appendChild liInner ulInner
-  text <- newText "Type classes with functional dependencies"
+  text ← newText "Type classes with functional dependencies"
   appendChild text liInner
-  liInner <- newLi
+  liInner ← newLi
   appendChild liInner ulInner
-  text <- newText "Higher-rank polymorphism"
+  text ← newText "Higher-rank polymorphism"
   appendChild text liInner
   pure div
 
-snippetFromPurescriptLandingPageWithWebChain :: Effect Node
+snippetFromPurescriptLandingPageWithWebChain ∷ Effect Node
 snippetFromPurescriptLandingPageWithWebChain =
   eln "div" []
     [ eln "h3" [] [ txn "Benefits" ]
 
     , eln "ul" []
-      [ eln "li" [] [ txn "Compile to readable JavaScript and reuse existing JavaScript code easily" ]
-      , eln "li" [] [ txn "An extensive collection of libraries for development of web applications, web servers, apps and more" ]
-      , eln "li" [] [ txn "Excellent tooling and editor support with instant rebuilds" ]
-      , eln "li" [] [ txn "An active community with many learning resources" ]
-      , eln "li" [] [ txn "Build real-world applications using functional techniques and expressive types, such as:"
-        , eln "ul" []
-          [ eln "li" [] [ txn "Algebraic data types and pattern matching" ]
-          , eln "li" [] [ txn "Row polymorphism and extensible records" ]
-          , eln "li" [] [ txn "Higher kinded types" ]
-          , eln "li" [] [ txn "Type classes with functional dependencies" ]
-          , eln "li" [] [ txn "Higher-rank polymorphism" ]
-          ]
+        [ eln "li" [] [ txn "Compile to readable JavaScript and reuse existing JavaScript code easily" ]
+        , eln "li" [] [ txn "An extensive collection of libraries for development of web applications, web servers, apps and more" ]
+        , eln "li" [] [ txn "Excellent tooling and editor support with instant rebuilds" ]
+        , eln "li" [] [ txn "An active community with many learning resources" ]
+        , eln "li" []
+            [ txn "Build real-world applications using functional techniques and expressive types, such as:"
+            , eln "ul" []
+                [ eln "li" [] [ txn "Algebraic data types and pattern matching" ]
+                , eln "li" [] [ txn "Row polymorphism and extensible records" ]
+                , eln "li" [] [ txn "Higher kinded types" ]
+                , eln "li" [] [ txn "Type classes with functional dependencies" ]
+                , eln "li" [] [ txn "Higher-rank polymorphism" ]
+                ]
+            ]
         ]
-      ]
     ]
 
 main ∷ Effect Unit

@@ -73,19 +73,20 @@ main = onReady_ $ \_ → do
                 /\
                   { classNames: [ "text-center" ]
                   , formatter: \key mBool table → do
-                      checkbox [] (maybe false withColBool mBool) (Just \ chkbx ->
-                          ( \_ → getSortOrder table >>=
-                              ( \_ →
-                                  updateRowsByColName
-                                    [ ( key /\ maybe (pure Nothing)
-                                          ( \dat →
-                                              Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked chkbx
-                                          )
-                                      )
-                                    ]
-                                    table
-                              )
-                          )
+                      checkbox [] (maybe false withColBool mBool)
+                        ( Just \chkbx →
+                            ( \_ → getSortOrder table >>=
+                                ( \_ →
+                                    updateRowsByColName
+                                      [ ( key /\ maybe (pure Nothing)
+                                            ( \dat →
+                                                Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked chkbx
+                                            )
+                                        )
+                                      ]
+                                      table
+                                )
+                            )
                         )
                         # ndM
                   , heading: (txn "Boolean Column" /\ [ "text-center" ])
@@ -156,12 +157,13 @@ main = onReady_ $ \_ → do
               ]
             -- >>= changeSortOrder [ "string" /\ true ]
             >>= updateRowsByColName
-              [ (1 /\ \_ → pure <<< Just $ M.fromArray
+              [ ( 1 /\ \_ → pure <<< Just $ M.fromArray
                     [ "bool" /\ ColBool false
                     , "string" /\ colString' "Text"
                     , "int" /\ colInt' 1
                     , "date" /\ colDate' instant
-                    ])
+                    ]
+                )
               ]
         void $ bodyElem +< [ nd tbl ]
     )

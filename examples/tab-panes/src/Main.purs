@@ -22,36 +22,37 @@ import Web.HTML.HTMLDocument (body)
 import Web.HTML.HTMLInputElement (checked)
 
 main ∷ Effect Unit
-main = onReady_ $ \ _ → do
+main = onReady_ $ \_ → do
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
-    (\ bodyElem → do
-      (elem /\ divElem) ← mkTabPanes [
-          {
-            tab: txn "Tab 1",
-            content: txn "Pane 1",
-            label: "profile"},
-          {
-            tab: txn "Tab II",
-            content: txn "Pane II",
-            label: "profile"},
-          {
-            tab: txn "Tab Three",
-            content: txn "Pane three",
-            label: "profile"}
-        ]
-        nullTabPaneClassNames {
-          tabsContainer = ["nav", "nav-tabs"],
-          allTabs = ["nav-link"],
-          activeTab = ["active"],
-          panes = ["tab-pane"]}
-      _ ← bodyElem +< [
-        eln "div" ["class" /\ "container-fluid"] [
-          eln "div" ["class" /\ "card"] [
-            eln "div" ["class" /\ "card-header"] [txn "Tab Panes"],
-            eln "div" ["class" /\ "card-body"] [nd elem, nd divElem]
+    ( \bodyElem → do
+        (elem /\ divElem) ← mkTabPanes
+          [ { tab: txn "Tab 1"
+            , content: txn "Pane 1"
+            , label: "profile"
+            }
+          , { tab: txn "Tab II"
+            , content: txn "Pane II"
+            , label: "profile"
+            }
+          , { tab: txn "Tab Three"
+            , content: txn "Pane three"
+            , label: "profile"
+            }
           ]
-        ]
-      ]
-      pure unit
+          nullTabPaneClassNames
+            { tabsContainer = [ "nav", "nav-tabs" ]
+            , allTabs = [ "nav-link" ]
+            , activeTab = [ "active" ]
+            , panes = [ "tab-pane" ]
+            }
+        _ ← bodyElem +<
+          [ eln "div" [ "class" /\ "container-fluid" ]
+              [ eln "div" [ "class" /\ "card" ]
+                  [ eln "div" [ "class" /\ "card-header" ] [ txn "Tab Panes" ]
+                  , eln "div" [ "class" /\ "card-body" ] [ nd elem, nd divElem ]
+                  ]
+              ]
+          ]
+        pure unit
     )

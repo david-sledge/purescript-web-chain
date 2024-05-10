@@ -42,22 +42,22 @@ main = onReady_ $ \_ → do
               , txn "What's your name? "
               , nameField
                   # onChange
-                    ( const do
-                        value ← val nameField
-                        empty welcomeMessageArea +<<
-                          [ txn
-                              ( if value == "" then "Greetings!"
-                                else "Greetings, " <> value <> "!"
-                              )
-                          ]
-                    )
+                      ( const do
+                          value ← val nameField
+                          empty welcomeMessageArea +<<
+                            [ txn
+                                ( if value == "" then "Greetings!"
+                                  else "Greetings, " <> value <> "!"
+                                )
+                            ]
+                      )
                   # changeM
                   # ndM
               , nd welcomeMessageArea
               , ( button [] [ txn "Stop Greeting Me" ] <<< Just <<< const $ const do
                     void $ allOff nameField
                     empty welcomeMessageArea
-                  )
+                )
                   # ndM
               ]
           ]

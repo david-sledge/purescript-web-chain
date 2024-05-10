@@ -19,8 +19,7 @@ module Web.Chain.CSSOM
   , show
   , showM
   , styleAttr
-  )
-  where
+  ) where
 
 import Prelude hiding (add, show)
 
@@ -50,7 +49,7 @@ setCssPropM ∷ ∀ m n. MonadEffect m ⇒ HTMLElementOp n ⇒ String → String
 setCssPropM = compose bindFlipped <<< setCssProp
 
 setCss ∷ ∀ m n f. MonadEffect m ⇒ HTMLElementOp n ⇒ Foldable f ⇒ f (String /\ String) → n → m n
-setCss cssProps n = traverse_ (\(name /\ val) -> setCssProp name val n) cssProps *> pure n
+setCss cssProps n = traverse_ (\(name /\ val) → setCssProp name val n) cssProps *> pure n
 
 setCssM ∷ ∀ m n f. MonadEffect m ⇒ HTMLElementOp n ⇒ Foldable f ⇒ f (String /\ String) → m n → m n
 setCssM = bindFlipped <<< setCss
@@ -115,16 +114,16 @@ show n = do
 showM ∷ ∀ m n. MonadEffect m ⇒ HTMLElementOp n ⇒ m n → m n
 showM = bindFlipped show
 
-addClasses :: forall m n f. MonadEffect m => ElementOp n => Foldable f => f String -> n -> m n
+addClasses ∷ ∀ m n f. MonadEffect m ⇒ ElementOp n ⇒ Foldable f ⇒ f String → n → m n
 addClasses classes n = do
   classList n >>= compose liftEffect (flip traverse_ classes) <<< add
   pure n
 
-addClassesM :: forall m n f. MonadEffect m => ElementOp n => Foldable f => f String -> m n -> m n
+addClassesM ∷ ∀ m n f. MonadEffect m ⇒ ElementOp n ⇒ Foldable f ⇒ f String → m n → m n
 addClassesM = bindFlipped <<< addClasses
 
-classAttr :: forall f. Foldable f => f String -> Array (String /\ String) -> Array (String /\ String)
+classAttr ∷ ∀ f. Foldable f ⇒ f String → Array (String /\ String) → Array (String /\ String)
 classAttr classNames attrs = snoc attrs ("class" /\ intercalate " " classNames)
 
-styleAttr :: forall f. Foldable f => f (String /\ String) -> Array (String /\ String) -> Array (String /\ String)
-styleAttr properties attrs = snoc attrs ("style" /\ foldl (\ acc (name /\ val) -> acc <> name <> ":" <> val <> ";") "" properties)
+styleAttr ∷ ∀ f. Foldable f ⇒ f (String /\ String) → Array (String /\ String) → Array (String /\ String)
+styleAttr properties attrs = snoc attrs ("style" /\ foldl (\acc (name /\ val) → acc <> name <> ":" <> val <> ";") "" properties)

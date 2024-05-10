@@ -179,10 +179,10 @@ changeSortOrder
   → m (UISortableTable k a f1 f2)
 changeSortOrder newOrder table = do
   colSpecs ← liftEffect $ _getColSpecs table
-  (newSortOrder /\ nameSet) <- foldWithItemCountM
+  (newSortOrder /\ nameSet) ← foldWithItemCountM
     ( \cnt (sortOrder /\ set) (name /\ dir) →
         maybe (pure $ sortOrder /\ set)
-          ( \(_ /\ sortDirUi) ->
+          ( \(_ /\ sortDirUi) →
               if S.member name set then pure $ sortOrder /\ set
               else do
                 void $ empty sortDirUi
@@ -195,7 +195,7 @@ changeSortOrder newOrder table = do
     ([] /\ S.empty)
     newOrder
   traverse_
-    ( \(name /\ (_ /\ sortDirUi)) ->
+    ( \(name /\ (_ /\ sortDirUi)) →
         unless (S.member name nameSet) <<< void $ conceal sortDirUi
     )
     colSpecs
@@ -225,19 +225,19 @@ foldWithItemCountM f init = map snd <<< foldM
 mkSortableTable_
   ∷ ∀ m k a f1 f2 f3 f4
    . MonadEffect m
-  => Hashable k
-  => Ord a
-  => Foldable f2
-  => Foldable f3
-  => Foldable f4
-  => (String -> Int -> Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement)) -> String)
-  -> f3 String
-  -> f4 (String /\ ColSpec k a f1 f2)
-  -> m (UISortableTable k a f1 f2)
+  ⇒ Hashable k
+  ⇒ Ord a
+  ⇒ Foldable f2
+  ⇒ Foldable f3
+  ⇒ Foldable f4
+  ⇒ (String → Int → Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement)) → String)
+  → f3 String
+  → f4 (String /\ ColSpec k a f1 f2)
+  → m (UISortableTable k a f1 f2)
 mkSortableTable_ f classNames colSpecs = do
   tRow ← tr [] []
   tableBody ← el "tbody" [] []
-  tbl ← unsafeCoerce <$> table ( [] # classAttr classNames )
+  tbl ← unsafeCoerce <$> table ([] # classAttr classNames)
     [ eln "thead" []
         [ nd tRow
         ]
@@ -246,12 +246,12 @@ mkSortableTable_ f classNames colSpecs = do
   (sortOrder /\ newColSpecs) ←
     foldWithItemCountM
       ( \col (sortOrder /\ colSpecs') (name /\ colSpec) → do
-          sortDirUi <- span ( [] # styleAttr ["opacity" /\ (show $ 0.9 / (pow 2.0 $ toNumber col) + 0.1)] ) [ txn "\x25b2" ]
+          sortDirUi ← span ([] # styleAttr [ "opacity" /\ (show $ 0.9 / (pow 2.0 $ toNumber col) + 0.1) ]) [ txn "\x25b2" ]
           th
             ([] # classAttr (snd colSpec.heading))
             [ div ([] # styleAttr [ "display" /\ "inline-flex" ])
                 [ div [] [ liftEffect $ fst colSpec.heading ] # ndM
-                , span ( [] # styleAttr ["white-space" /\ "pre"] ) [ txn " " ] # ndM
+                , span ([] # styleAttr [ "white-space" /\ "pre" ]) [ txn " " ] # ndM
                 , nd sortDirUi
                 ]
                 # ndM
@@ -375,7 +375,7 @@ updateRows f g updateFs table = do
                   ( \acc (name /\ (colSpec /\ _)) →
                       snoc acc
                         ( td
-                            ( [] # classAttr colSpec.classNames )
+                            ([] # classAttr colSpec.classNames)
                             [ liftEffect $ colSpec.formatter key (M.lookup name newRowData) table ]
                             # ndM
                         )

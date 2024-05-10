@@ -31,14 +31,16 @@ main = onReady_ $ \_ →
         nameInput ← textField [] ""
         _ ← bodyElem +<
           [ eln "h1" [] [ txn "BeforeUnloadEvent" ]
-          , nameInput # on "input"
-              ( \_ → do
-                  value ← val nameInput
-                  window #
-                    ( if value == "" then offM
-                      else onM
-                    ) "beforeunload" beforeUnloadHandler
-              ) # ndM
+          , nameInput
+              # on "input"
+                  ( \_ → do
+                      value ← val nameInput
+                      window #
+                        ( if value == "" then offM
+                          else onM
+                        ) "beforeunload" beforeUnloadHandler
+                  )
+              # ndM
           ]
         pure unit
     )

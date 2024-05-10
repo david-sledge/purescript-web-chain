@@ -50,27 +50,29 @@ mkTabPanes
   → TabPaneClassNames f2 f3 f4 f5 f6
   → m (Element /\ HTMLDivElement)
 mkTabPanes details classNames = do
-  tabs ← el "nav" ( [ "role" /\ "tablist" ] # C.classAttr classNames.tabsContainer ) []
+  tabs ← el "nav" ([ "role" /\ "tablist" ] # C.classAttr classNames.tabsContainer) []
   tabPanePairArray ← A.new
-  contentPanes ← H.div ( [] # C.classAttr classNames.panesContainer ) []
+  contentPanes ← H.div ([] # C.classAttr classNames.panesContainer) []
   traverse_
     ( \detail → do
         hasChildren ← hasChildNodes tabs
         let
           paneId = "nav-" <> detail.label
           tabId = paneId <> "-tab"
-        contentUi ← H.div
+        contentUi ←
+          H.div
             ( [ "aria-labelledby" /\ tabId
               , "id" /\ paneId
               , "role" /\ "tabpanel"
               , "tabindex" /\ "0"
               ]
-              # C.classAttr classNames.panes
+                # C.classAttr classNames.panes
             )
             [ detail.content ]
-          # if hasChildren then C.hideM else C.showM
+            # if hasChildren then C.hideM else C.showM
         appendChild contentUi $ toNode contentPanes
-        tabUi ← el
+        tabUi ←
+          el
             "button"
             ( [ "aria-controls" /\ paneId
               , "aria-selected" /\ (if hasChildren then "false" else "true")
@@ -80,23 +82,23 @@ mkTabPanes details classNames = do
               , "role" /\ "tab"
               , "type" /\ "button"
               ]
-              # C.classAttr classNames.allTabs
+                # C.classAttr classNames.allTabs
             )
             [ detail.tab ]
-          # onM "click" \_ → do
-              -- iterate through content panes
-              traverse_
-                ( \(tab /\ pane) → do
-                    ( let
-                        toggle f bs g = do
-                          traverse_ (bind (classList tab) <<< flip f) classNames.activeTab
-                          _ ← setAttrs [ "aria-selected" /\ bs ] tab
-                          g pane
-                      in
-                        if unsafeRefEq pane contentUi then toggle D.add "true" C.show
-                        else toggle D.remove "false" C.hide
-                    )
-                ) =<< A.freeze tabPanePairArray
+            # onM "click" \_ → do
+                -- iterate through content panes
+                traverse_
+                  ( \(tab /\ pane) → do
+                      ( let
+                          toggle f bs g = do
+                            traverse_ (bind (classList tab) <<< flip f) classNames.activeTab
+                            _ ← setAttrs [ "aria-selected" /\ bs ] tab
+                            g pane
+                        in
+                          if unsafeRefEq pane contentUi then toggle D.add "true" C.show
+                          else toggle D.remove "false" C.hide
+                      )
+                  ) =<< A.freeze tabPanePairArray
         when (not hasChildren) <<< void $ C.addClasses classNames.activeTab tabUi
         A.push (tabUi /\ contentUi) tabPanePairArray
         appendChild tabUi $ toNode tabs
