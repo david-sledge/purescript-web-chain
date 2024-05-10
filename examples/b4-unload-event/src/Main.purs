@@ -28,7 +28,7 @@ main = onReady_ $ \_ →
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
     ( \bodyElem → do
-        nameInput ← textField ""
+        nameInput ← textField [] ""
         _ ← bodyElem +<
           [ eln "h1" [] [ txn "BeforeUnloadEvent" ]
           , nameInput # on "input"

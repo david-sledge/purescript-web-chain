@@ -22,7 +22,7 @@ main = onReady_ $ \_ → do
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
     ( \bodyElem → do
-        nameField ← textField ""
+        nameField ← textField [] ""
         welcomeMessageArea ← el "div" [] [ txn "This should never be displayed because nameField's change listener is immediately triggered below (changeM)" ]
         {--
       <body>

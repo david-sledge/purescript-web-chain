@@ -53,13 +53,13 @@ import Web.HTML.HTMLTableElement as HT
 import Web.HTML.HTMLTableRowElement as HTR
 
 -- | Create a plain ol' input field of type text with a default value.
-textField ∷ ∀ m. MonadEffect m ⇒ String → m HTMLInputElement
-textField defaultValue =
+textField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → String → m HTMLInputElement
+textField attrs defaultValue =
   maybe
     (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"input\" val' did not produce an HTMLInputElement")
     pure <<<
     HI.fromElement =<<
-    el "input" [ ("value" /\ defaultValue), ("type" /\ "text") ] []
+    (el "input" attrs [] # setAttrsM [ "type" /\ "text", "value" /\ defaultValue ])
 
 {-
 text field functions:
@@ -195,5 +195,5 @@ uncheck checkbx = do
 checkbox ∷ forall m f a. MonadEffect m => Foldable f => f (String /\ String) -> Boolean -> Maybe (HTMLInputElement -> Event -> Effect a) -> m HTMLInputElement
 checkbox attributes isChecked mChange = do
   chk <- el "input" attributes [] >>=
-    testConversion "button" "HTMLInputElement" <<< HI.fromElement >>= if isChecked then check else uncheck
+    testConversion "input" "HTMLInputElement" <<< HI.fromElement >>= if isChecked then check else uncheck
   chk # maybe pure (on "change" <<< (#) chk) mChange # setAttrsM [ "type" /\ "checkbox" ]
