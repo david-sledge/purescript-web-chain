@@ -7,7 +7,7 @@ module Web.Chain.UI.UITabPane
 import Prelude
 
 import Data.Array.Mutable as A
-import Data.Foldable (class Foldable, null, traverse_)
+import Data.Foldable (class Foldable, traverse_)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Class (class MonadEffect)
 import Unsafe.Reference (unsafeRefEq)
@@ -97,7 +97,7 @@ mkTabPanes details classNames = do
                         else toggle D.remove "false" C.hide
                     )
                 ) =<< A.freeze tabPanePairArray
-        when (hasChildren && not (null classNames.activeTab)) <<< void $ C.addClasses classNames.activeTab tabUi
+        when (not hasChildren) <<< void $ C.addClasses classNames.activeTab tabUi
         A.push (tabUi /\ contentUi) tabPanePairArray
         appendChild tabUi $ toNode tabs
     )

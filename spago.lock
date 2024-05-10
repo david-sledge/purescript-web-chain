@@ -357,6 +357,70 @@ workspace:
         - web-html
         - web-storage
         - web-uievents
+    tab-panes:
+      path: examples/tab-panes
+      dependencies:
+        - prelude
+        - web-chain
+      test_dependencies: []
+      build_plan:
+        - arrays
+        - bifunctors
+        - const
+        - contravariant
+        - control
+        - datetime
+        - distributive
+        - effect
+        - either
+        - enums
+        - exceptions
+        - exists
+        - foldable-traversable
+        - foreign
+        - functions
+        - functors
+        - gen
+        - identity
+        - integers
+        - invariant
+        - js-date
+        - lazy
+        - lists
+        - maybe
+        - media-types
+        - newtype
+        - nonempty
+        - now
+        - nullable
+        - numbers
+        - ordered-collections
+        - orders
+        - partial
+        - prelude
+        - profunctor
+        - record
+        - refs
+        - safe-coerce
+        - st
+        - strings
+        - tailrec
+        - transformers
+        - tuples
+        - type-equality
+        - typelevel-prelude
+        - unfoldable
+        - unordered-collections
+        - unsafe-coerce
+        - unsafe-reference
+        - web-chain
+        - web-cssom
+        - web-dom
+        - web-events
+        - web-file
+        - web-html
+        - web-storage
+        - web-uievents
     web-chain:
       path: ./
       dependencies:

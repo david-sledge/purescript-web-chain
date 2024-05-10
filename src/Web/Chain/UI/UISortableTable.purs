@@ -249,11 +249,12 @@ mkSortableTable_ f classNames colSpecs = do
           sortDirUi <- span ( [] # styleAttr ["opacity" /\ (show $ 0.9 / (pow 2.0 $ toNumber col) + 0.1)] ) [ txn "\x25b2" ]
           th
             ([] # classAttr (snd colSpec.heading))
-            [ ndM $ div ([] # styleAttr [ "display" /\ "inline-flex" ])
-                [ ndM $ div [] [ liftEffect $ fst colSpec.heading ]
-                , ndM $ span ( [] # styleAttr ["white-space" /\ "pre"] ) [ txn " " ]
+            [ div ([] # styleAttr [ "display" /\ "inline-flex" ])
+                [ div [] [ liftEffect $ fst colSpec.heading ] # ndM
+                , span ( [] # styleAttr ["white-space" /\ "pre"] ) [ txn " " ] # ndM
                 , nd sortDirUi
                 ]
+                # ndM
             ]
             # onM "click"
                 ( const do
@@ -373,10 +374,10 @@ updateRows f g updateFs table = do
                 newRowUi ← tr [] $ foldl
                   ( \acc (name /\ (colSpec /\ _)) →
                       snoc acc
-                        ( ndM $
-                            td
-                              ( [] # classAttr colSpec.classNames )
-                              [ liftEffect $ colSpec.formatter key (M.lookup name newRowData) table ]
+                        ( td
+                            ( [] # classAttr colSpec.classNames )
+                            [ liftEffect $ colSpec.formatter key (M.lookup name newRowData) table ]
+                            # ndM
                         )
                   )
                   []

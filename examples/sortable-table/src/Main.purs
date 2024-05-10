@@ -73,19 +73,21 @@ main = onReady_ $ \_ → do
                 /\
                   { classNames: [ "text-center" ]
                   , formatter: \key mBool table → do
-                      ndM $ checkbox [] (maybe false withColBool mBool) (Just \ chkbx ->
-                        ( \_ → getSortOrder table >>=
-                            ( \_ →
-                                updateRowsByColName
-                                  [ ( key /\ maybe (pure Nothing)
-                                        ( \dat →
-                                            Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked chkbx
-                                        )
-                                    )
-                                  ]
-                                  table
-                            )
-                        )) --}
+                      checkbox [] (maybe false withColBool mBool) (Just \ chkbx ->
+                          ( \_ → getSortOrder table >>=
+                              ( \_ →
+                                  updateRowsByColName
+                                    [ ( key /\ maybe (pure Nothing)
+                                          ( \dat →
+                                              Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked chkbx
+                                          )
+                                      )
+                                    ]
+                                    table
+                              )
+                          )
+                        )
+                        # ndM
                   , heading: (txn "Boolean Column" /\ [ "text-center" ])
                   }
             , "string"

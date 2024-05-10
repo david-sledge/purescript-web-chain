@@ -29,7 +29,7 @@ import Control.Bind (bindFlipped)
 import Data.Either (Either(Left, Right), either)
 import Data.Foldable (class Foldable, intercalate)
 import Data.Int (fromString, toNumber)
-import Data.List (List(Nil), (:))
+import Data.List ((:))
 import Data.List.Util (s)
 import Data.Maybe (Maybe(Nothing), fromMaybe, maybe)
 import Data.Number.Format (toString)
@@ -37,10 +37,10 @@ import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (attrM, el, rmAttrM, setAttrs, setAttrsM)
+import Web.Chain.DOM (attrM, el, rmAttrM, setAttrsM)
 import Web.DOM (Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
-import Web.Event.Class.EventTargetOp (on, onM)
+import Web.Event.Class.EventTargetOp (on)
 import Web.Event.Event (Event)
 import Web.HTML (HTMLButtonElement, HTMLInputElement)
 import Web.HTML.HTMLButtonElement as HB
@@ -192,7 +192,7 @@ uncheck checkbx = do
   pure checkbx
 
 -- | Create a checkbox.
--- checkbox ∷ ∀ m f a. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Boolean → Maybe (HTMLInputElement → Event → Effect a) → m HTMLInputElement
+checkbox ∷ forall m f a. MonadEffect m => Foldable f => f (String /\ String) -> Boolean -> Maybe (HTMLInputElement -> Event -> Effect a) -> m HTMLInputElement
 checkbox attributes isChecked mChange = do
   chk <- el "input" attributes [] >>=
     testConversion "button" "HTMLInputElement" <<< HI.fromElement >>= if isChecked then check else uncheck

@@ -40,7 +40,7 @@ main = onReady_ $ \_ →
                       ]
                   ]
               , eln "div" []
-                  [ ndM $ el "button" [ "type" /\ "reset" ] [ txn "Cancel" ]
+                  [ eln "button" [ "type" /\ "reset" ] [ txn "Cancel" ]
                   , eln "button" [ "type" /\ "submit" ] [ txn "Confirm" ]
                   ]
               ]
@@ -49,11 +49,12 @@ main = onReady_ $ \_ →
         _ ← bodyElem +<
           [ nd dialog
           , eln "div" []
-              [ ndM $ button [] [ txn "Update details" ]
+              [ button [] [ txn "Update details" ]
                   ( Just $ const \ _ -> do
                       showModal dialog
                       openCheck dialog
                   )
+                  # ndM
               ]
           ]
         pure unit
