@@ -6,7 +6,7 @@ module Web.Chain.UI.UITabPane
 
 import Prelude
 
-import Data.Array.Mutable as A
+import Data.Array.Effect as A
 import Data.Foldable (class Foldable, traverse_)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Class (class MonadEffect)

@@ -3,23 +3,27 @@ module Web.Chain.UI.UISortableTable
   , UISortableTable
   , changeSortOrder
   , clearTable
+  , foldTableDataM
   , getColumnNames
   , getSortOrder
   , mkSortableTable
   , mkSortableTableNoNames
+  , size
   , sortTable
-  , updateRowsByColPos
   , updateRowsByColName
-  ) where
+  , updateRowsByColPos
+  )
+  where
 
 import Prelude hiding (div)
 
 import Data.Array (drop, cons, snoc, sortBy)
 import Data.Foldable (class Foldable, foldM, foldl, indexl, lookup, traverse_)
+import Data.FoldableWithIndex (foldWithIndexM)
 import Data.HashMap as M
 import Data.HashSet as S
 import Data.Hashable (class Hashable)
-import Data.Map.Mutable as MM
+import Data.Map.Effect as MM
 import Data.Maybe (Maybe, maybe)
 import Data.Number (pow)
 import Data.Int (toNumber)
@@ -98,14 +102,14 @@ foreign import _getSortOrder
 
 foreign import _setTableData
   ∷ ∀ k a f1 f2
-  . MM.MMap k (HTMLTableRowElement /\ M.HashMap String a)
+  . MM.EffectMap k (HTMLTableRowElement /\ M.HashMap String a)
   → UISortableTable k a f1 f2
   → Effect Unit
 
 foreign import _getTableData
   ∷ ∀ k a f1 f2
   . UISortableTable k a f1 f2
-  → Effect (MM.MMap k (HTMLTableRowElement /\ M.HashMap String a))
+  → Effect (MM.EffectMap k (HTMLTableRowElement /\ M.HashMap String a))
 
 getSortOrder
   ∷ ∀ m k a f1 f2
@@ -447,3 +451,19 @@ clearTable table = liftEffect do
   tableBody ← _getDataTableBody table
   void $ empty tableBody
   pure table
+
+foldTableDataM
+  ∷ ∀ m b a f1 f2 k
+  . MonadEffect m
+  ⇒ Hashable k
+  ⇒ (k → b → M.HashMap String a → m b)
+  → b
+  → UISortableTable k a f1 f2
+  → m b
+foldTableDataM f a table =
+  liftEffect (_getTableData table)
+    >>= MM.freeze
+    >>= foldWithIndexM (\ k acc (_ /\ v) → f k acc v) a
+
+size ∷ ∀ m k a f1 f2. MonadEffect m => UISortableTable k a f1 f2 -> m Int
+size table = MM.size =<< liftEffect (_getTableData table)
