@@ -14,7 +14,7 @@ import Web.DOM.Document as D
 import Web.HTML.HTMLDocument (HTMLDocument)
 import Web.HTML.HTMLDocument as HD
 
-class NodeOp d <= DocumentOp d where
+class NodeOp d ⇐ DocumentOp d where
   toDocument ∷ d → Document
 
 --------------------------------------------------------------------------------

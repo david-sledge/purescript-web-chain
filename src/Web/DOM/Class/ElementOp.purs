@@ -4,6 +4,7 @@ module Web.DOM.Class.ElementOp
   ( class ElementOp
   , classList
   , getAttribute
+  , hasAttribute
   , removeAttribute
   , setAttribute
   , toElement
@@ -80,7 +81,7 @@ import Web.HTML.HTMLTrackElement as HTa
 import Web.HTML.HTMLUListElement as HUL
 import Web.HTML.HTMLVideoElement as HVi
 
-class NodeOp n <= ElementOp n where
+class NodeOp n ⇐ ElementOp n where
   toElement ∷ n → E.Element
 
 --------------------------------------------------------------------------------
@@ -285,6 +286,9 @@ getAttribute name = liftEffect <<< E.getAttribute name <<< toElement
 
 removeAttribute ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → e → m Unit
 removeAttribute name = liftEffect <<< E.removeAttribute name <<< toElement
+
+hasAttribute ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ String → e → m Boolean
+hasAttribute name = liftEffect <<< E.hasAttribute name <<< toElement
 
 classList ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ e → m DOMTokenList
 classList = liftEffect <<< E.classList <<< toElement

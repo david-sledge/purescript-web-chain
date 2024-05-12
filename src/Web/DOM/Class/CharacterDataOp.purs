@@ -6,7 +6,7 @@ import Web.DOM (CharacterData, Text)
 import Web.DOM.Class.NodeOp (class NodeOp)
 import Web.DOM.Text as T
 
-class NodeOp c <= CharacterDataOp c where
+class NodeOp c ⇐ CharacterDataOp c where
   toCharacterData ∷ c → CharacterData
 
 --------------------------------------------------------------------------------

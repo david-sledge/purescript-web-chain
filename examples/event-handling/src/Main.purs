@@ -13,8 +13,7 @@ import Effect.Exception (error, throwException)
 import Web.Chain.DOM (doc, el, eln, empty, nd, ndM, txn, (+<), (+<<))
 import Web.Chain.Event (changeM, onChange, onReady_)
 import Web.Chain.HTML (button, textField, val)
-import Web.HTML.Class.HTMLAbleOp (disable)
-import Web.Event.Class.EventTargetOp (allOff)
+import Web.Chain.HTML.Class.HTMLAbleOp (disable)
 import Web.HTML.HTMLDocument (body)
 
 main ∷ Effect Unit
@@ -55,8 +54,7 @@ main = onReady_ $ \_ → do
                   # changeM
                   # ndM
               , nd welcomeMessageArea
-              , ( button [] [ txn "Stop Greeting Me" ] $ Just \ btn -> const do
-                    allOff nameField # void
+              , ( button [] [ txn "Stop Greeting Me" ] $ Just \btn → const do
                     empty welcomeMessageArea # void
                     disable nameField # void
                     disable btn

@@ -105,7 +105,7 @@ import Web.HTML.HTMLTrackElement as HTa
 import Web.HTML.HTMLUListElement as HUL
 import Web.HTML.HTMLVideoElement as HVi
 
-class EventTargetOp n <= NodeOp n where
+class EventTargetOp n ⇐ NodeOp n where
   toNode ∷ n → Node
 
 --------------------------------------------------------------------------------

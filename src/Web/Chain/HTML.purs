@@ -3,12 +3,11 @@ module Web.Chain.HTML
   ( button
   , check
   , checkbox
-  , disable
   , div
-  , enable
-  , isEnabled
   , maxLen
   , minLen
+  , numberField
+  , passwordField
   , setAutocomplete
   , setLenLimits
   , span
@@ -36,7 +35,7 @@ import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (attrM, el, rmAttrM, setAttrsM)
+import Web.Chain.DOM (attrM, el, setAttrsM)
 import Web.DOM (Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
 import Web.Event.Class.EventTargetOp (on)
@@ -51,14 +50,14 @@ import Web.HTML.HTMLTableCellElement as HTD
 import Web.HTML.HTMLTableElement as HT
 import Web.HTML.HTMLTableRowElement as HTR
 
-testConversion ∷ ∀ m el. MonadEffect m ⇒ String → String → Maybe el → m el
-testConversion tag typeName = maybe (liftEffect <<< throwException $ error $ "'Web.Chain.DOM.el \"" <> tag <> "\"' did not produce " <> typeName) pure
+testCoercion ∷ ∀ m el. MonadEffect m ⇒ String → String → Maybe el → m el
+testCoercion tag typeName = maybe (liftEffect <<< throwException $ error $ "'Web.Chain.DOM.el \"" <> tag <> "\"' did not produce " <> typeName) pure
 
 -- | Create a plain ol' input field of type text with a default value.
 textField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → String → m HTMLInputElement
 textField attrs defaultValue =
   (el "input" attrs [] # setAttrsM [ "type" /\ "text", "value" /\ defaultValue ])
-    >>= testConversion "input" "HTMLInputElement" <<< HIn.fromElement
+    >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
 
 {-
 text field functions:
@@ -81,21 +80,6 @@ setAutocomplete autocomplete mInput = do
   input ← mInput
   liftEffect $ HIn.setAutocomplete autocomplete input
   pure input
-
--- | Enable an input. The input is returned.
-enable ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ m e → m e
-enable = rmAttrM "disabled"
-
--- | Disable an input. The input is returned.
-disable ∷ ∀ e m. ElementOp e ⇒ MonadEffect m ⇒ m e → m e
-disable = setAttrsM (s ("disabled" /\ "disabled"))
-
--- | Is this input enabled?
-isEnabled ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ m e → m Boolean
-isEnabled mInput =
-  maybe
-    (pure true)
-    (pure <<< (/=) "disabled") =<< attrM "disabled" mInput
 
 -- | Set the the range limits on the required number of characters of a text
 -- | field. The text field is returned.
@@ -140,42 +124,54 @@ val input = liftEffect $ value input
 valM ∷ ∀ m. MonadEffect m ⇒ m HTMLInputElement → m String
 valM = bindFlipped val
 
+-- | Create a plain ol' input field of type number with a default value.
+numberField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Maybe Number → m HTMLInputElement
+numberField attrs mDefaultValue =
+  (el "input" attrs [] # setAttrsM [ "type" /\ "number", "value" /\ (maybe "" show mDefaultValue) ])
+    >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
+
+-- | Create a password text field.
+passwordField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → m HTMLInputElement
+passwordField attrs =
+  (el "input" attrs [] # setAttrsM [ "type" /\ "password" ])
+    >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
+
 -- | Create a button.
-button ∷ ∀ m f1 f2 a. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → Maybe (HTMLButtonElement → Event → Effect a) → m HTMLButtonElement
+button ∷ ∀ m f1 f2 a. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → Maybe (HTMLButtonElement → Event → Effect a) → m HTMLButtonElement
 button attributes childNodesM mClick = do
   btn ← el "button" attributes childNodesM >>=
-    testConversion "button" "HTMLButtonElement" <<< HBu.fromElement
+    testCoercion "button" "HTMLButtonElement" <<< HBu.fromElement
   btn # maybe pure (on "click" <<< (#) btn) mClick
 
 div ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HD.HTMLDivElement
 div attributes children =
   el "div" attributes children >>=
-    testConversion "div" "HTMLDivElement" <<< HD.fromElement
+    testCoercion "div" "HTMLDivElement" <<< HD.fromElement
 
 span ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HSp.HTMLSpanElement
 span attributes children =
   el "span" attributes children >>=
-    testConversion "span" "HTMLSpanElement" <<< HSp.fromElement
+    testCoercion "span" "HTMLSpanElement" <<< HSp.fromElement
 
 tr ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTR.HTMLTableRowElement
 tr attributes children =
   el "tr" attributes children >>=
-    testConversion "tr" "HTMLTableRowElement" <<< HTR.fromElement
+    testCoercion "tr" "HTMLTableRowElement" <<< HTR.fromElement
 
 td ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTD.HTMLTableCellElement
 td attributes children =
   el "td" attributes children >>=
-    testConversion "td" "HTMLTableCellElement" <<< HTD.fromElement
+    testCoercion "td" "HTMLTableCellElement" <<< HTD.fromElement
 
 th ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTD.HTMLTableCellElement
 th attributes children =
   el "th" attributes children >>=
-    testConversion "th" "HTMLTableCellElement" <<< HTD.fromElement
+    testCoercion "th" "HTMLTableCellElement" <<< HTD.fromElement
 
 table ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HT.HTMLTableElement
 table attributes children =
   el "table" attributes children >>=
-    testConversion "table" "HTMLTableElement" <<< HT.fromElement
+    testCoercion "table" "HTMLTableElement" <<< HT.fromElement
 
 check ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m HTMLInputElement
 check checkbx = do
@@ -191,6 +187,6 @@ uncheck checkbx = do
 checkbox ∷ ∀ m f a. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Boolean → Maybe (HTMLInputElement → Event → Effect a) → m HTMLInputElement
 checkbox attributes isChecked mChange = do
   chk ← el "input" attributes []
-    >>= testConversion "input" "HTMLInputElement" <<< HIn.fromElement
+    >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
     >>= if isChecked then check else uncheck
   chk # maybe pure (on "change" <<< (#) chk) mChange # setAttrsM [ "type" /\ "checkbox" ]

@@ -8,7 +8,7 @@ import Prelude
 import Web.DOM (Text)
 import Web.DOM.Class.CharacterDataOp (class CharacterDataOp)
 
-class CharacterDataOp t <= TextOp t where
+class CharacterDataOp t ⇐ TextOp t where
   toText ∷ t → Text
 
 instance TextOp Text where

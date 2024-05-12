@@ -75,7 +75,7 @@ import Web.HTML.HTMLTrackElement as HTa
 import Web.HTML.HTMLUListElement as HUL
 import Web.HTML.HTMLVideoElement as HVi
 
-class ElementOp n <= HTMLElementOp n where
+class ElementOp n ⇐ HTMLElementOp n where
   toHTMLElement ∷ n → HE.HTMLElement
 
 --------------------------------------------------------------------------------
