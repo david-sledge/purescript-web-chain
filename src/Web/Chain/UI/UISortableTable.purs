@@ -248,10 +248,10 @@ mkSortableTable_ f classNames colSpecs = do
       ( \col (sortOrder /\ colSpecs') (name /\ colSpec) → do
           sortDirUi ← span ([] # styleAttr [ "opacity" /\ (show $ 0.9 / (pow 2.0 $ toNumber col) + 0.1) ]) [ txn "\x25b2" ]
           th
-            ([] # classAttr (snd colSpec.heading))
-            [ div ([] # styleAttr [ "display" /\ "inline-flex" ])
+            ( classAttr (snd colSpec.heading) [] )
+            [ div ( styleAttr [ "display" /\ "inline-flex", "align-items" /\ "end" ] [] )
                 [ div [] [ liftEffect $ fst colSpec.heading ] # ndM
-                , span ([] # styleAttr [ "white-space" /\ "pre" ]) [ txn " " ] # ndM
+                , span ( styleAttr [ "white-space" /\ "pre" ] [] ) [ txn " " ] # ndM
                 , nd sortDirUi
                 ]
                 # ndM

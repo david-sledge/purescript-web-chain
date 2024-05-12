@@ -49,14 +49,69 @@ import Web.DOM.Text as T
 import Web.Event.Event (Event, EventType(EventType))
 import Web.Event.EventTarget (EventTarget, addEventListenerWithOptions, dispatchEvent, eventListener)
 import Web.HTML (Window)
-import Web.HTML.HTMLButtonElement as HB
+import Web.HTML.HTMLAnchorElement as HAn
+import Web.HTML.HTMLAreaElement as HAr
+import Web.HTML.HTMLAudioElement as HAu
+import Web.HTML.HTMLBRElement as HBR
+import Web.HTML.HTMLBaseElement as HBa
+import Web.HTML.HTMLBodyElement as HBo
+import Web.HTML.HTMLButtonElement as HBu
+import Web.HTML.HTMLCanvasElement as HCa
+import Web.HTML.HTMLDListElement as HDL
+import Web.HTML.HTMLDataElement as HDE
+import Web.HTML.HTMLDataListElement as HDa
 import Web.HTML.HTMLDivElement as HDv
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
-import Web.HTML.HTMLInputElement as HI
-import Web.HTML.HTMLSpanElement as HS
-import Web.HTML.HTMLTableCellElement as HTd
+import Web.HTML.HTMLEmbedElement as HEm
+import Web.HTML.HTMLFieldSetElement as HFi
+import Web.HTML.HTMLFormElement as HFo
+import Web.HTML.HTMLHRElement as HHR
+import Web.HTML.HTMLHeadElement as HHe
+import Web.HTML.HTMLHeadingElement as HHa
+import Web.HTML.HTMLHtmlElement as HHt
+import Web.HTML.HTMLIFrameElement as HIF
+import Web.HTML.HTMLInputElement as HIn
+import Web.HTML.HTMLKeygenElement as HKe
+import Web.HTML.HTMLLIElement as HLI
+import Web.HTML.HTMLLabelElement as HLa
+import Web.HTML.HTMLLegendElement as HLe
+import Web.HTML.HTMLLinkElement as HLi
+import Web.HTML.HTMLMapElement as HMa
+import Web.HTML.HTMLMediaElement as HMe
+import Web.HTML.HTMLMetaElement as HMt
+import Web.HTML.HTMLMeterElement as HMr
+import Web.HTML.HTMLModElement as HMo
+import Web.HTML.HTMLOListElement as HOL
+import Web.HTML.HTMLObjectElement as HOb
+import Web.HTML.HTMLOptGroupElement as HOG
+import Web.HTML.HTMLOptionElement as HOp
+import Web.HTML.HTMLOutputElement as HOu
+import Web.HTML.HTMLParagraphElement as HPa
+import Web.HTML.HTMLParamElement as HPm
+import Web.HTML.HTMLPreElement as HPr
+import Web.HTML.HTMLProgressElement as HPo
+import Web.HTML.HTMLQuoteElement as HQu
+import Web.HTML.HTMLScriptElement as HSc
+import Web.HTML.HTMLSelectElement as HSe
+import Web.HTML.HTMLSourceElement as HSo
+import Web.HTML.HTMLSpanElement as HSp
+import Web.HTML.HTMLStyleElement as HSt
+import Web.HTML.HTMLTableCaptionElement as HTC
+import Web.HTML.HTMLTableCellElement as HTe
+import Web.HTML.HTMLTableColElement as HTo
+import Web.HTML.HTMLTableDataCellElement as HTd
+import Web.HTML.HTMLTableElement as HTE
+import Web.HTML.HTMLTableHeaderCellElement as HTH
 import Web.HTML.HTMLTableRowElement as HTr
+import Web.HTML.HTMLTableSectionElement as HTS
+import Web.HTML.HTMLTemplateElement as HTm
+import Web.HTML.HTMLTextAreaElement as HTA
+import Web.HTML.HTMLTimeElement as HTi
+import Web.HTML.HTMLTitleElement as HTt
+import Web.HTML.HTMLTrackElement as HTa
+import Web.HTML.HTMLUListElement as HUL
+import Web.HTML.HTMLVideoElement as HVi
 
 class EventTargetOp et where
   toEventTarget ∷ et → EventTarget
@@ -97,23 +152,188 @@ instance EventTargetOp Text where
 
 --------------------------------------------------------------------------------
 -- great-great-grandchildren
-instance EventTargetOp HB.HTMLButtonElement where
-  toEventTarget = HB.toEventTarget
+instance EventTargetOp HAn.HTMLAnchorElement where
+  toEventTarget = HAn.toEventTarget
+
+instance EventTargetOp HAr.HTMLAreaElement where
+  toEventTarget = HAr.toEventTarget
+
+instance EventTargetOp HAu.HTMLAudioElement where
+  toEventTarget = HAu.toEventTarget
+
+instance EventTargetOp HBR.HTMLBRElement where
+  toEventTarget = HBR.toEventTarget
+
+instance EventTargetOp HBa.HTMLBaseElement where
+  toEventTarget = HBa.toEventTarget
+
+instance EventTargetOp HBo.HTMLBodyElement where
+  toEventTarget = HBo.toEventTarget
+
+instance EventTargetOp HBu.HTMLButtonElement where
+  toEventTarget = HBu.toEventTarget
+
+instance EventTargetOp HCa.HTMLCanvasElement where
+  toEventTarget = HCa.toEventTarget
+
+instance EventTargetOp HDL.HTMLDListElement where
+  toEventTarget = HDL.toEventTarget
+
+instance EventTargetOp HDE.HTMLDataElement where
+  toEventTarget = HDE.toEventTarget
+
+instance EventTargetOp HDa.HTMLDataListElement where
+  toEventTarget = HDa.toEventTarget
 
 instance EventTargetOp HDv.HTMLDivElement where
   toEventTarget = HDv.toEventTarget
 
-instance EventTargetOp HI.HTMLInputElement where
-  toEventTarget = HI.toEventTarget
+instance EventTargetOp HEm.HTMLEmbedElement where
+  toEventTarget = HEm.toEventTarget
 
-instance EventTargetOp HS.HTMLSpanElement where
-  toEventTarget = HS.toEventTarget
+instance EventTargetOp HFi.HTMLFieldSetElement where
+  toEventTarget = HFi.toEventTarget
 
-instance EventTargetOp HTd.HTMLTableCellElement where
+instance EventTargetOp HFo.HTMLFormElement where
+  toEventTarget = HFo.toEventTarget
+
+instance EventTargetOp HHR.HTMLHRElement where
+  toEventTarget = HHR.toEventTarget
+
+instance EventTargetOp HHe.HTMLHeadElement where
+  toEventTarget = HHe.toEventTarget
+
+instance EventTargetOp HHa.HTMLHeadingElement where
+  toEventTarget = HHa.toEventTarget
+
+instance EventTargetOp HHt.HTMLHtmlElement where
+  toEventTarget = HHt.toEventTarget
+
+instance EventTargetOp HIF.HTMLIFrameElement where
+  toEventTarget = HIF.toEventTarget
+
+instance EventTargetOp HIn.HTMLInputElement where
+  toEventTarget = HIn.toEventTarget
+
+instance EventTargetOp HKe.HTMLKeygenElement where
+  toEventTarget = HKe.toEventTarget
+
+instance EventTargetOp HLI.HTMLLIElement where
+  toEventTarget = HLI.toEventTarget
+
+instance EventTargetOp HLa.HTMLLabelElement where
+  toEventTarget = HLa.toEventTarget
+
+instance EventTargetOp HLe.HTMLLegendElement where
+  toEventTarget = HLe.toEventTarget
+
+instance EventTargetOp HLi.HTMLLinkElement where
+  toEventTarget = HLi.toEventTarget
+
+instance EventTargetOp HMa.HTMLMapElement where
+  toEventTarget = HMa.toEventTarget
+
+instance EventTargetOp HMe.HTMLMediaElement where
+  toEventTarget = HMe.toEventTarget
+
+instance EventTargetOp HMt.HTMLMetaElement where
+  toEventTarget = HMt.toEventTarget
+
+instance EventTargetOp HMr.HTMLMeterElement where
+  toEventTarget = HMr.toEventTarget
+
+instance EventTargetOp HMo.HTMLModElement where
+  toEventTarget = HMo.toEventTarget
+
+instance EventTargetOp HOL.HTMLOListElement where
+  toEventTarget = HOL.toEventTarget
+
+instance EventTargetOp HOb.HTMLObjectElement where
+  toEventTarget = HOb.toEventTarget
+
+instance EventTargetOp HOG.HTMLOptGroupElement where
+  toEventTarget = HOG.toEventTarget
+
+instance EventTargetOp HOp.HTMLOptionElement where
+  toEventTarget = HOp.toEventTarget
+
+instance EventTargetOp HOu.HTMLOutputElement where
+  toEventTarget = HOu.toEventTarget
+
+instance EventTargetOp HPa.HTMLParagraphElement where
+  toEventTarget = HPa.toEventTarget
+
+instance EventTargetOp HPm.HTMLParamElement where
+  toEventTarget = HPm.toEventTarget
+
+instance EventTargetOp HPr.HTMLPreElement where
+  toEventTarget = HPr.toEventTarget
+
+instance EventTargetOp HPo.HTMLProgressElement where
+  toEventTarget = HPo.toEventTarget
+
+instance EventTargetOp HQu.HTMLQuoteElement where
+  toEventTarget = HQu.toEventTarget
+
+instance EventTargetOp HSc.HTMLScriptElement where
+  toEventTarget = HSc.toEventTarget
+
+instance EventTargetOp HSe.HTMLSelectElement where
+  toEventTarget = HSe.toEventTarget
+
+instance EventTargetOp HSo.HTMLSourceElement where
+  toEventTarget = HSo.toEventTarget
+
+instance EventTargetOp HSp.HTMLSpanElement where
+  toEventTarget = HSp.toEventTarget
+
+instance EventTargetOp HSt.HTMLStyleElement where
+  toEventTarget = HSt.toEventTarget
+
+instance EventTargetOp HTC.HTMLTableCaptionElement where
+  toEventTarget = HTC.toEventTarget
+
+instance EventTargetOp HTe.HTMLTableCellElement where
+  toEventTarget = HTe.toEventTarget
+
+instance EventTargetOp HTo.HTMLTableColElement where
+  toEventTarget = HTo.toEventTarget
+
+instance EventTargetOp HTd.HTMLTableDataCellElement where
   toEventTarget = HTd.toEventTarget
+
+instance EventTargetOp HTE.HTMLTableElement where
+  toEventTarget = HTE.toEventTarget
+
+instance EventTargetOp HTH.HTMLTableHeaderCellElement where
+  toEventTarget = HTH.toEventTarget
 
 instance EventTargetOp HTr.HTMLTableRowElement where
   toEventTarget = HTr.toEventTarget
+
+instance EventTargetOp HTS.HTMLTableSectionElement where
+  toEventTarget = HTS.toEventTarget
+
+instance EventTargetOp HTm.HTMLTemplateElement where
+  toEventTarget = HTm.toEventTarget
+
+instance EventTargetOp HTA.HTMLTextAreaElement where
+  toEventTarget = HTA.toEventTarget
+
+instance EventTargetOp HTi.HTMLTimeElement where
+  toEventTarget = HTi.toEventTarget
+
+instance EventTargetOp HTt.HTMLTitleElement where
+  toEventTarget = HTt.toEventTarget
+
+instance EventTargetOp HTa.HTMLTrackElement where
+  toEventTarget = HTa.toEventTarget
+
+instance EventTargetOp HUL.HTMLUListElement where
+  toEventTarget = HUL.toEventTarget
+
+instance EventTargetOp HVi.HTMLVideoElement where
+  toEventTarget = HVi.toEventTarget
 
 type EventOptions = { bubbles ∷ Boolean, cancelable ∷ Boolean, composed ∷ Boolean }
 
@@ -183,7 +403,8 @@ unregisterListener details target = liftEffect do
                 && details.options.capture == details'.options.capture
                 && details.options.once == details'.options.once
                 &&
-                  details.options.passive == details'.options.once then pure (run (unsafeThaw detailss >>= splice ndx 1 []))
+                  details.options.passive == details'.options.once
+            then pure (run (unsafeThaw detailss >>= splice ndx 1 []))
               *> _rmListener details eventTarget
               *>
                 pure true

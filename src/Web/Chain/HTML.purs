@@ -42,11 +42,11 @@ import Web.DOM.Class.ElementOp (class ElementOp)
 import Web.Event.Class.EventTargetOp (on)
 import Web.Event.Event (Event)
 import Web.HTML (HTMLButtonElement, HTMLInputElement)
-import Web.HTML.HTMLButtonElement as HB
+import Web.HTML.HTMLButtonElement as HBu
 import Web.HTML.HTMLDivElement as HD
-import Web.HTML.HTMLSpanElement as HS
+import Web.HTML.HTMLSpanElement as HSp
 import Web.HTML.HTMLInputElement (value)
-import Web.HTML.HTMLInputElement as HI
+import Web.HTML.HTMLInputElement as HIn
 import Web.HTML.HTMLTableCellElement as HTD
 import Web.HTML.HTMLTableElement as HT
 import Web.HTML.HTMLTableRowElement as HTR
@@ -58,7 +58,7 @@ testConversion tag typeName = maybe (liftEffect <<< throwException $ error $ "'W
 textField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → String → m HTMLInputElement
 textField attrs defaultValue =
   (el "input" attrs [] # setAttrsM [ "type" /\ "text", "value" /\ defaultValue ])
-    >>= testConversion "input" "HTMLInputElement" <<< HI.fromElement
+    >>= testConversion "input" "HTMLInputElement" <<< HIn.fromElement
 
 {-
 text field functions:
@@ -79,7 +79,7 @@ isvalid
 setAutocomplete ∷ ∀ m. MonadEffect m ⇒ String → m HTMLInputElement → m HTMLInputElement
 setAutocomplete autocomplete mInput = do
   input ← mInput
-  liftEffect $ HI.setAutocomplete autocomplete input
+  liftEffect $ HIn.setAutocomplete autocomplete input
   pure input
 
 -- | Enable an input. The input is returned.
@@ -144,7 +144,7 @@ valM = bindFlipped val
 button ∷ ∀ m f1 f2 a. Bind m ⇒ MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → Maybe (HTMLButtonElement → Event → Effect a) → m HTMLButtonElement
 button attributes childNodesM mClick = do
   btn ← el "button" attributes childNodesM >>=
-    testConversion "button" "HTMLButtonElement" <<< HB.fromElement
+    testConversion "button" "HTMLButtonElement" <<< HBu.fromElement
   btn # maybe pure (on "click" <<< (#) btn) mClick
 
 div ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HD.HTMLDivElement
@@ -152,10 +152,10 @@ div attributes children =
   el "div" attributes children >>=
     testConversion "div" "HTMLDivElement" <<< HD.fromElement
 
-span ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HS.HTMLSpanElement
+span ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HSp.HTMLSpanElement
 span attributes children =
   el "span" attributes children >>=
-    testConversion "span" "HTMLSpanElement" <<< HS.fromElement
+    testConversion "span" "HTMLSpanElement" <<< HSp.fromElement
 
 tr ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTR.HTMLTableRowElement
 tr attributes children =
@@ -179,18 +179,18 @@ table attributes children =
 
 check ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m HTMLInputElement
 check checkbx = do
-  liftEffect $ HI.setChecked true checkbx
+  liftEffect $ HIn.setChecked true checkbx
   pure checkbx
 
 uncheck ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m HTMLInputElement
 uncheck checkbx = do
-  liftEffect $ HI.setChecked false checkbx
+  liftEffect $ HIn.setChecked false checkbx
   pure checkbx
 
 -- | Create a checkbox.
 checkbox ∷ ∀ m f a. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Boolean → Maybe (HTMLInputElement → Event → Effect a) → m HTMLInputElement
 checkbox attributes isChecked mChange = do
   chk ← el "input" attributes []
-    >>= testConversion "input" "HTMLInputElement" <<< HI.fromElement
+    >>= testConversion "input" "HTMLInputElement" <<< HIn.fromElement
     >>= if isChecked then check else uncheck
   chk # maybe pure (on "change" <<< (#) chk) mChange # setAttrsM [ "type" /\ "checkbox" ]
