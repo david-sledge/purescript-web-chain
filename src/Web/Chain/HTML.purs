@@ -1,6 +1,7 @@
 -- | Functions for specific types of HTML elements.
 module Web.Chain.HTML
-  ( button
+  ( SelectContent(..)
+  , button
   , check
   , checkbox
   , div
@@ -10,6 +11,7 @@ module Web.Chain.HTML
   , passwordField
   , setAutocomplete
   , setLenLimits
+  , singleSelect
   , span
   , table
   , td
@@ -19,13 +21,15 @@ module Web.Chain.HTML
   , uncheck
   , val
   , valM
-  ) where
+  )
+  where
 
 import Prelude
 
 import Control.Bind (bindFlipped)
+import Data.Array (cons)
 import Data.Either (Either(Left, Right), either)
-import Data.Foldable (class Foldable, intercalate)
+import Data.Foldable (class Foldable, foldM, intercalate)
 import Data.Int (fromString, toNumber)
 import Data.List ((:))
 import Data.List.Util (s)
@@ -35,7 +39,7 @@ import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (attrM, el, setAttrsM)
+import Web.Chain.DOM (attrM, el, eln, setAttrsM, txn)
 import Web.DOM (Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
 import Web.Event.Class.EventTargetOp (on)
@@ -43,9 +47,10 @@ import Web.Event.Event (Event)
 import Web.HTML (HTMLButtonElement, HTMLInputElement)
 import Web.HTML.HTMLButtonElement as HBu
 import Web.HTML.HTMLDivElement as HD
-import Web.HTML.HTMLSpanElement as HSp
 import Web.HTML.HTMLInputElement (value)
 import Web.HTML.HTMLInputElement as HIn
+import Web.HTML.HTMLSelectElement as HSe
+import Web.HTML.HTMLSpanElement as HSp
 import Web.HTML.HTMLTableCellElement as HTD
 import Web.HTML.HTMLTableElement as HT
 import Web.HTML.HTMLTableRowElement as HTR
@@ -190,3 +195,28 @@ checkbox attributes isChecked mChange = do
     >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
     >>= if isChecked then check else uncheck
   chk # maybe pure (on "change" <<< (#) chk) mChange # setAttrsM [ "type" /\ "checkbox" ]
+
+data SelectContent f
+  = Option String String
+  | OptGroup String (f (String /\ String))
+  | HR
+
+singleSelect ∷ ∀ m f1 f2 f3.
+  MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ Foldable f3 ⇒
+  f1 (String /\ String) → f2 (SelectContent f3) → m HSe.HTMLSelectElement
+singleSelect attributes content =
+  ( foldM (\ acc cntnt ->
+      cons
+        ( case cntnt of
+          Option value label -> eln "option" [ "value" /\ value ] [ txn label ]
+          OptGroup label options -> foldM (\ acc' (value' /\ label') ->
+                cons (eln "option" [ "value" /\ value' ] [ txn label' ]) acc' # pure
+              ) [] options >>= eln "optgroup" [ "label" /\ label ]
+          HR -> eln "hr" [] []
+        )
+        acc
+        # pure
+    ) [] content
+  )
+  >>= el "select" attributes
+  >>= testCoercion "select" "HTMLSelectElement" <<< HSe.fromElement
