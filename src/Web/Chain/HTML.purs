@@ -19,21 +19,18 @@ module Web.Chain.HTML
   , th
   , tr
   , uncheck
-  , val
-  , valM
   )
   where
 
 import Prelude
 
-import Control.Bind (bindFlipped)
-import Data.Array (cons)
+import Data.Array (snoc)
 import Data.Either (Either(Left, Right), either)
 import Data.Foldable (class Foldable, foldM, intercalate)
 import Data.Int (fromString, toNumber)
 import Data.List ((:))
 import Data.List.Util (s)
-import Data.Maybe (Maybe(Nothing), fromMaybe, maybe)
+import Data.Maybe (Maybe(Just, Nothing), fromMaybe, maybe)
 import Data.Number.Format (toString)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
@@ -47,7 +44,6 @@ import Web.Event.Event (Event)
 import Web.HTML (HTMLButtonElement, HTMLInputElement)
 import Web.HTML.HTMLButtonElement as HBu
 import Web.HTML.HTMLDivElement as HD
-import Web.HTML.HTMLInputElement (value)
 import Web.HTML.HTMLInputElement as HIn
 import Web.HTML.HTMLSelectElement as HSe
 import Web.HTML.HTMLSpanElement as HSp
@@ -121,14 +117,6 @@ maxLen mInput = maybe Nothing fromString <$> attrM "maxlength" mInput
 minLen ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ m e → m Int
 minLen mInput = maybe 0 (fromMaybe 0 <<< fromString) <$> attrM "minlength" mInput
 
--- | Get the text from a text field.
-val ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m String
-val input = liftEffect $ value input
-
--- | Get the text from a text field.
-valM ∷ ∀ m. MonadEffect m ⇒ m HTMLInputElement → m String
-valM = bindFlipped val
-
 -- | Create a plain ol' input field of type number with a default value.
 numberField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Maybe Number → m HTMLInputElement
 numberField attrs mDefaultValue =
@@ -196,25 +184,33 @@ checkbox attributes isChecked mChange = do
     >>= if isChecked then check else uncheck
   chk # maybe pure (on "change" <<< (#) chk) mChange # setAttrsM [ "type" /\ "checkbox" ]
 
-data SelectContent f
+data SelectContent
   = Option String String
-  | OptGroup String (f (String /\ String))
+  | OptGroup String (Array (String /\ String))
   | HR
 
 singleSelect ∷ ∀ m f1 f2 f3.
   MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ Foldable f3 ⇒
-  f1 (String /\ String) → f2 (SelectContent f3) → m HSe.HTMLSelectElement
-singleSelect attributes content =
+  f1 (String /\ String) → f2 (SelectContent) → Maybe String → m HSe.HTMLSelectElement
+singleSelect attributes content mInitial =
   ( foldM (\ acc cntnt ->
-      cons
+      snoc
+        acc
         ( case cntnt of
-          Option value label -> eln "option" [ "value" /\ value ] [ txn label ]
+          Option value label -> eln "option"
+              ( if Just value == mInitial
+                then [ "value" /\ value, "selected" /\ "" ]
+                else [ "value" /\ value ]
+              ) [ txn label ]
           OptGroup label options -> foldM (\ acc' (value' /\ label') ->
-                cons (eln "option" [ "value" /\ value' ] [ txn label' ]) acc' # pure
+                snoc acc' (eln "option"
+                    ( if Just value' == mInitial
+                      then [ "value" /\ value', "selected" /\ "" ]
+                      else [ "value" /\ value' ]
+                    ) [ txn label' ]) # pure
               ) [] options >>= eln "optgroup" [ "label" /\ label ]
           HR -> eln "hr" [] []
         )
-        acc
         # pure
     ) [] content
   )

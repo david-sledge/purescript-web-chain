@@ -11,63 +11,76 @@ module Web.Chain.HTML.Class.HTMLAbleOp
 import Prelude
 
 import Control.Bind (bindFlipped)
-import Data.Tuple.Nested ((/\))
-import Effect.Class (class MonadEffect)
-import Web.Chain.DOM (rmAttr, setAttrs)
-import Web.HTML.Class.HTMLElementOp (class HTMLElementOp)
-import Web.DOM.Class.ElementOp (class ElementOp, hasAttribute)
-import Web.HTML (HTMLButtonElement, HTMLFieldSetElement, HTMLInputElement, HTMLOptGroupElement, HTMLOptionElement, HTMLSelectElement, HTMLTextAreaElement)
+import Effect (Effect)
+import Effect.Class (class MonadEffect, liftEffect)
+import Web.HTML.HTMLButtonElement as HBu
+import Web.HTML.HTMLFieldSetElement as HFi
+import Web.HTML.HTMLInputElement as HIn
+import Web.HTML.HTMLOptGroupElement as HOG
+import Web.HTML.HTMLOptionElement as HOp
+import Web.HTML.HTMLSelectElement as HSe
+import Web.HTML.HTMLTextAreaElement as HTA
 
-class HTMLElementOp el ⇐ HTMLAbleOp el where
+class HTMLAbleOp el where
   disable ∷ ∀ m. MonadEffect m ⇒ el → m el
   enable ∷ ∀ m. MonadEffect m ⇒ el → m el
+  isEnabled ∷ ∀ m. MonadEffect m ⇒ el → m Boolean
 
-disable_ ∷ ∀ el m. ElementOp el ⇒ MonadEffect m ⇒ el → m el
-disable_ = setAttrs [ "disabled" /\ "" ]
+a ∷ ∀ b a el m. MonadEffect m ⇒ (b → el → Effect a) → b → el → m el
+a f b el = liftEffect (f b el) *> pure el
 
-enable_ ∷ ∀ el m. ElementOp el ⇒ MonadEffect m ⇒ el → m el
-enable_ = rmAttr "disabled"
+d ∷ ∀ a el m. MonadEffect m ⇒ (Boolean → el → Effect a) → el → m el
+d f = a f true
 
---------------------------------------------------------------------------------
-instance HTMLAbleOp HTMLButtonElement where
-  disable = disable_
-  enable = enable_
+e ∷ ∀ a el m. MonadEffect m ⇒ (Boolean → el → Effect a) → el → m el
+e f = a f false
 
-instance HTMLAbleOp HTMLFieldSetElement where
-  disable = disable_
-  enable = enable_
-
-instance HTMLAbleOp HTMLInputElement where
-  disable = disable_
-  enable = enable_
-
-instance HTMLAbleOp HTMLOptGroupElement where
-  disable = disable_
-  enable = enable_
-
-instance HTMLAbleOp HTMLOptionElement where
-  disable = disable_
-  enable = enable_
-
-instance HTMLAbleOp HTMLSelectElement where
-  disable = disable_
-  enable = enable_
-
-instance HTMLAbleOp HTMLTextAreaElement where
-  disable = disable_
-  enable = enable_
+ie ∷ ∀ m a el. HeytingAlgebra a ⇒ MonadEffect m ⇒ (el → Effect a) → el → m a
+ie f = map not <<< liftEffect <<< f
 
 --------------------------------------------------------------------------------
-disableM :: forall m el. Bind m ⇒ HTMLAbleOp el ⇒ MonadEffect m ⇒ m el → m el
+instance HTMLAbleOp HBu.HTMLButtonElement where
+  disable = d HBu.setDisabled
+  enable = e HBu.setDisabled
+  isEnabled = ie HBu.disabled
+
+instance HTMLAbleOp HFi.HTMLFieldSetElement where
+  disable = d HFi.setDisabled
+  enable = e HFi.setDisabled
+  isEnabled = ie HFi.disabled
+
+instance HTMLAbleOp HIn.HTMLInputElement where
+  disable = d HIn.setDisabled
+  enable = e HIn.setDisabled
+  isEnabled = ie HIn.disabled
+
+instance HTMLAbleOp HOG.HTMLOptGroupElement where
+  disable = d HOG.setDisabled
+  enable = e HOG.setDisabled
+  isEnabled = ie HOG.disabled
+
+instance HTMLAbleOp HOp.HTMLOptionElement where
+  disable = d HOp.setDisabled
+  enable = e HOp.setDisabled
+  isEnabled = ie HOp.disabled
+
+instance HTMLAbleOp HSe.HTMLSelectElement where
+  disable = d HSe.setDisabled
+  enable = e HSe.setDisabled
+  isEnabled = ie HSe.disabled
+
+instance HTMLAbleOp HTA.HTMLTextAreaElement where
+  disable = d HTA.setDisabled
+  enable = e HTA.setDisabled
+  isEnabled = ie HTA.disabled
+
+--------------------------------------------------------------------------------
+disableM ∷ ∀ m el. HTMLAbleOp el ⇒ MonadEffect m ⇒ m el → m el
 disableM = bindFlipped disable
 
-enableM :: forall m el. Bind m ⇒ HTMLAbleOp el ⇒ MonadEffect m ⇒ m el → m el
+enableM ∷ ∀ m el. HTMLAbleOp el ⇒ MonadEffect m ⇒ m el → m el
 enableM = bindFlipped enable
 
 -- | Is this input enabled?
-isEnabled :: forall m el. MonadEffect m ⇒ HTMLAbleOp el ⇒ el → m Boolean
-isEnabled = hasAttribute "disabled"
-
--- | Is this input enabled?
-isEnabledM :: forall m el. MonadEffect m ⇒ HTMLAbleOp el ⇒ m el → m Boolean
-isEnabledM = bindFlipped $ hasAttribute "disabled"
+isEnabledM ∷ ∀ m el. MonadEffect m ⇒ HTMLAbleOp el ⇒ m el → m Boolean
+isEnabledM = bindFlipped isEnabled

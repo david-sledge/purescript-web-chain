@@ -12,8 +12,9 @@ import Effect.Console (log)
 import Effect.Exception (error, throwException)
 import Web.Chain.DOM (doc, el, eln, empty, nd, ndM, txn, (+<), (+<<))
 import Web.Chain.Event (changeM, onChange, onReady_)
-import Web.Chain.HTML (button, textField, val)
+import Web.Chain.HTML (button, textField)
 import Web.Chain.HTML.Class.HTMLAbleOp (disable)
+import Web.Chain.HTML.Class.HTMLValueContainerOp (val)
 import Web.HTML.HTMLDocument (body)
 
 main ∷ Effect Unit
