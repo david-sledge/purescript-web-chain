@@ -10,6 +10,7 @@ module Web.DOM.Class.NodeOp
   , deepClone
   , firstChild
   , hasChildNodes
+  , insertBefore
   , isEqualNode
   , lastChild
   , nextSibling
@@ -23,11 +24,13 @@ module Web.DOM.Class.NodeOp
   , parentNode
   , previousSibling
   , removeChild
+  , replaceChild
   , setNodeValue
   , setTextContent
   , textContent
   , toNode
-  ) where
+  )
+  where
 
 import Prelude
 
@@ -399,3 +402,9 @@ removeChild = mehM <<< N.removeChild <<< toNode
 
 contains ∷ ∀ m p c. MonadEffect m ⇒ NodeOp c ⇒ NodeOp p ⇒ c → p → m Boolean
 contains = mehM <<< N.contains <<< toNode
+
+insertBefore ∷ ∀ m n1 n2 n3. MonadEffect m ⇒ NodeOp n1 ⇒ NodeOp n2 ⇒ NodeOp n3 ⇒ n1 → n2 → n3 → m Unit
+insertBefore n1 n2 = liftEffect <<< N.insertBefore (toNode n1) (toNode n2) <<< toNode
+
+replaceChild ∷ ∀ m n1 n2 n3. MonadEffect m ⇒ NodeOp n1 ⇒ NodeOp n2 ⇒ NodeOp n3 ⇒ n1 → n2 → n3 → m Unit
+replaceChild n1 n2 = liftEffect <<< N.replaceChild (toNode n1) (toNode n2) <<< toNode

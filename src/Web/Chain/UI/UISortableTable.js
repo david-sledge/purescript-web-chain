@@ -11,3 +11,6 @@ export const _getTableData = table => () => table.tableData;
 
 export const _setDataTableBody = tableDataBody => table => () => {table.tableDataBody = tableDataBody;};
 export const _getDataTableBody = table => () => table.tableDataBody;
+
+export const _setRowCountColumnClasses = rowCountColumnClasses => table => () => {table.rowCountColumnClasses = rowCountColumnClasses;};
+export const _getRowCountColumnClasses = table => () => table.rowCountColumnClasses;

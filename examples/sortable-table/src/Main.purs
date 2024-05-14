@@ -69,6 +69,7 @@ main = onReady_ $ \_ → do
         instant ← liftEffect now
         tbl ←
           mkSortableTable [ "table", "table-striped", "table-bordered", "table-condensed", "table-hover" ]
+            (Just ["text-end"])
             [ "bool"
                 /\
                   { classNames: [ "text-center" ]
