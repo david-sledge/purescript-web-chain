@@ -265,6 +265,74 @@ workspace:
         - web-html
         - web-storage
         - web-uievents
+    input-components:
+      path: examples/input-components
+      dependencies:
+        - console
+        - debug
+        - effect
+        - web-chain
+      test_dependencies: []
+      build_plan:
+        - arrays
+        - bifunctors
+        - console
+        - const
+        - contravariant
+        - control
+        - datetime
+        - debug
+        - distributive
+        - effect
+        - either
+        - enums
+        - exceptions
+        - exists
+        - foldable-traversable
+        - foreign
+        - functions
+        - functors
+        - gen
+        - identity
+        - integers
+        - invariant
+        - js-date
+        - lazy
+        - lists
+        - maybe
+        - media-types
+        - newtype
+        - nonempty
+        - now
+        - nullable
+        - numbers
+        - ordered-collections
+        - orders
+        - partial
+        - prelude
+        - profunctor
+        - record
+        - refs
+        - safe-coerce
+        - st
+        - strings
+        - tailrec
+        - transformers
+        - tuples
+        - type-equality
+        - typelevel-prelude
+        - unfoldable
+        - unordered-collections
+        - unsafe-coerce
+        - unsafe-reference
+        - web-chain
+        - web-cssom
+        - web-dom
+        - web-events
+        - web-file
+        - web-html
+        - web-storage
+        - web-uievents
     sortable-table:
       path: examples/sortable-table
       dependencies:

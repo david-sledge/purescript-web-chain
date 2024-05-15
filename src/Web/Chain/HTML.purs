@@ -5,6 +5,7 @@ module Web.Chain.HTML
   , check
   , checkbox
   , div
+  , docBody
   , maxLen
   , minLen
   , numberField
@@ -36,12 +37,14 @@ import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (attrM, el, eln, setAttrsM, txn)
+import Web.Chain.DOM (attrM, doc, el, eln, setAttrsM, txn)
+import Web.Chain.HTML.Util (testCoercion)
 import Web.DOM (Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
 import Web.Event.Class.EventTargetOp (on)
 import Web.Event.Event (Event)
 import Web.HTML (HTMLButtonElement, HTMLInputElement)
+import Web.HTML.HTMLBodyElement as HBo
 import Web.HTML.HTMLButtonElement as HBu
 import Web.HTML.HTMLDivElement as HD
 import Web.HTML.HTMLInputElement as HIn
@@ -50,9 +53,7 @@ import Web.HTML.HTMLSpanElement as HSp
 import Web.HTML.HTMLTableCellElement as HTD
 import Web.HTML.HTMLTableElement as HT
 import Web.HTML.HTMLTableRowElement as HTR
-
-testCoercion ∷ ∀ m el. MonadEffect m ⇒ String → String → Maybe el → m el
-testCoercion tag typeName = maybe (liftEffect <<< throwException $ error $ "'Web.Chain.DOM.el \"" <> tag <> "\"' did not produce " <> typeName) pure
+import Web.HTML.Lifted.HTMLDocument (body, setBody)
 
 -- | Create a plain ol' input field of type text with a default value.
 textField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → String → m HTMLInputElement
@@ -189,30 +190,40 @@ data SelectContent
   | OptGroup String (Array (String /\ String))
   | HR
 
-singleSelect ∷ ∀ m f1 f2 f3.
-  MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ Foldable f3 ⇒
+singleSelect ∷ ∀ m f1 f2.
+  MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒
   f1 (String /\ String) → f2 (SelectContent) → Maybe String → m HSe.HTMLSelectElement
 singleSelect attributes content mInitial =
-  ( foldM (\ acc cntnt ->
+  ( foldM (\ acc cntnt →
       snoc
         acc
         ( case cntnt of
-          Option value label -> eln "option"
+          Option value label → eln "option"
               ( if Just value == mInitial
                 then [ "value" /\ value, "selected" /\ "" ]
                 else [ "value" /\ value ]
               ) [ txn label ]
-          OptGroup label options -> foldM (\ acc' (value' /\ label') ->
+          OptGroup label options → foldM (\ acc' (value' /\ label') →
                 snoc acc' (eln "option"
                     ( if Just value' == mInitial
                       then [ "value" /\ value', "selected" /\ "" ]
                       else [ "value" /\ value' ]
                     ) [ txn label' ]) # pure
               ) [] options >>= eln "optgroup" [ "label" /\ label ]
-          HR -> eln "hr" [] []
+          HR → eln "hr" [] []
         )
         # pure
     ) [] content
   )
   >>= el "select" attributes
   >>= testCoercion "select" "HTMLSelectElement" <<< HSe.fromElement
+
+docBody ∷ ∀ m. MonadEffect m ⇒ m HBo.HTMLBodyElement
+docBody = do
+  docu <- doc
+  body docu >>= maybe
+    ( do
+      bdy <- el "body" [] [] >>= testCoercion "body" "HTMLBodyElement" <<< HBo.fromElement
+      setBody bdy docu
+      pure bdy
+    ) pure

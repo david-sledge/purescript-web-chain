@@ -12,13 +12,12 @@ import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (liftEffect)
-import Effect.Exception (error, throwException)
 import Effect.Now (now)
-import Web.Chain.DOM (doc, nd, ndM, txn, (+<))
-import Web.Chain.Event (onChange, onReady_)
-import Web.Chain.HTML (checkbox)
-import Web.Chain.UI.UISortableTable (changeSortOrder, getSortOrder, mkSortableTable, updateRowsByColName)
-import Web.HTML.HTMLDocument (body)
+import Web.DOM.Class.NodeOp (appendChild)
+import Web.Chain.DOM (ndM, txn)
+import Web.Chain.Event (onReady_)
+import Web.Chain.HTML (checkbox, docBody)
+import Web.Chain.UI.UISortableTable (getSortOrder, mkSortableTable, updateRowsByColName)
 import Web.HTML.HTMLInputElement (checked)
 
 data Col
@@ -62,109 +61,104 @@ instance colOrd ∷ Ord Col where
   compare _ _ = EQ
 
 main ∷ Effect Unit
-main = onReady_ $ \_ → do
-  (liftEffect $ body =<< doc) >>= maybe
-    (liftEffect <<< throwException $ error "No document body")
-    ( \bodyElem → do
-        instant ← liftEffect now
-        tbl ←
-          mkSortableTable [ "table", "table-striped", "table-bordered", "table-condensed", "table-hover" ]
-            (Just ["text-end"])
-            [ "bool"
-                /\
-                  { classNames: [ "text-center" ]
-                  , formatter: \key mBool table → do
-                      checkbox [] (maybe false withColBool mBool)
-                        ( Just \chkbx →
-                            ( \_ → getSortOrder table >>=
-                                ( \_ →
-                                    updateRowsByColName
-                                      [ ( key /\ maybe (pure Nothing)
-                                            ( \dat →
-                                                Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked chkbx
-                                            )
-                                        )
-                                      ]
-                                      table
-                                )
-                            )
-                        )
-                        # ndM
-                  , heading: (txn "Boolean Column" /\ [ "text-center" ])
-                  }
-            , "string"
-                /\
-                  { classNames: []
-                  , formatter: \_ mString _ → txn <<< fromMaybe "\x2014" $ flip bind withColString mString
-                  , heading: (txn "String Column" /\ [])
-                  }
-            , "int"
-                /\
-                  { classNames: [ "text-end" ]
-                  , formatter: \_ mInt _ → txn <<< maybe "\x2014" show $ flip bind withColInt mInt
-                  , heading: (txn "Int Column" /\ [ "text-end" ])
-                  }
-            , "date"
-                /\
-                  { classNames: []
-                  , formatter: \_ mDateTime _ →
-                      txn <<<
-                        maybe
-                          "\x2014"
-                          ( either
-                              (const "\x2014")
-                              identity
-                              <<< formatDateTime "YYYY-MM-DD HH:mm"
-                              <<< toDateTime
+main = onReady_ \_ → do
+    instant ← liftEffect now
+    mkSortableTable [ "table", "table-striped", "table-bordered", "table-condensed", "table-hover" ]
+      (Just ["text-end"])
+      [ "bool"
+          /\
+            { classNames: [ "text-center" ]
+            , formatter: \key mBool table → do
+                checkbox [] (maybe false withColBool mBool)
+                  ( Just \chkbx →
+                      ( \_ → getSortOrder table >>=
+                          ( \_ →
+                              updateRowsByColName
+                                [ ( key /\ maybe (pure Nothing)
+                                      ( \dat →
+                                          Just <<< flip (M.insert "bool") dat <<< ColBool <$> checked chkbx
+                                      )
+                                  )
+                                ]
+                                table
                           )
-                        $ flip bind withColDate mDateTime
-                  , heading: (txn "Date Column" /\ [])
-                  }
-            ]
-            >>= updateRowsByColName
-              [ ( 1 /\ \_ → pure <<< Just $ M.fromArray
-                    [ "bool" /\ ColBool false
-                    , "string" /\ colString' "Text"
-                    , "int" /\ colInt' 0
-                    , "date" /\ colDate' instant
-                    ]
-                )
-              , ( 2 /\ \_ → pure <<< Just $ M.fromArray
-                    [ "bool" /\ ColBool true
-                    , "string" /\ ColString Nothing
-                    , "int" /\ ColInt Nothing
-                    , "date" /\ ColDate Nothing
-                    ]
-                )
+                      )
+                  )
+                  # ndM
+            , heading: (txn "Boolean Column" /\ [ "text-center" ])
+            }
+      , "string"
+          /\
+            { classNames: []
+            , formatter: \_ mString _ → txn <<< fromMaybe "\x2014" $ flip bind withColString mString
+            , heading: (txn "String Column" /\ [])
+            }
+      , "int"
+          /\
+            { classNames: [ "text-end" ]
+            , formatter: \_ mInt _ → txn <<< maybe "\x2014" show $ flip bind withColInt mInt
+            , heading: (txn "Int Column" /\ [ "text-end" ])
+            }
+      , "date"
+          /\
+            { classNames: []
+            , formatter: \_ mDateTime _ →
+                txn <<<
+                  maybe
+                    "\x2014"
+                    ( either
+                        (const "\x2014")
+                        identity
+                        <<< formatDateTime "YYYY-MM-DD HH:mm"
+                        <<< toDateTime
+                    )
+                  $ flip bind withColDate mDateTime
+            , heading: (txn "Date Column" /\ [])
+            }
+      ]
+      >>= updateRowsByColName
+        [ ( 1 /\ \_ → pure <<< Just $ M.fromArray
+              [ "bool" /\ ColBool false
+              , "string" /\ colString' "Text"
+              , "int" /\ colInt' 0
+              , "date" /\ colDate' instant
               ]
-            >>= updateRowsByColName
-              [ ( 2 /\ \_ → pure <<< Just $ M.fromArray
-                    [ "bool" /\ ColBool true
-                    , "string" /\ colString' "Sequence of characters"
-                    , "int" /\ ColInt Nothing
-                    , "date" /\ colDate' instant
-                    ]
-                )
-              , ( 3 /\ \_ → pure <<< Just $ M.fromArray
-                    [ "bool" /\ ColBool false
-                    , "string" /\ colString' "String"
-                    , "int" /\ colInt' (-3)
-                    , "date" /\ ColDate Nothing
-                    ]
-                )
+          )
+        , ( 2 /\ \_ → pure <<< Just $ M.fromArray
+              [ "bool" /\ ColBool true
+              , "string" /\ ColString Nothing
+              , "int" /\ ColInt Nothing
+              , "date" /\ ColDate Nothing
               ]
-            >>= updateRowsByColName
-              [ (1 /\ \_ → pure $ Nothing)
+          )
+        ]
+      >>= updateRowsByColName
+        [ ( 2 /\ \_ → pure <<< Just $ M.fromArray
+              [ "bool" /\ ColBool true
+              , "string" /\ colString' "Sequence of characters"
+              , "int" /\ ColInt Nothing
+              , "date" /\ colDate' instant
               ]
-            -- >>= changeSortOrder [ "string" /\ true ]
-            >>= updateRowsByColName
-              [ ( 1 /\ \_ → pure <<< Just $ M.fromArray
-                    [ "bool" /\ ColBool false
-                    , "string" /\ colString' "Text"
-                    , "int" /\ colInt' 1
-                    , "date" /\ colDate' instant
-                    ]
-                )
+          )
+        , ( 3 /\ \_ → pure <<< Just $ M.fromArray
+              [ "bool" /\ ColBool false
+              , "string" /\ colString' "String"
+              , "int" /\ colInt' (-3)
+              , "date" /\ ColDate Nothing
               ]
-        void $ bodyElem +< [ nd tbl ]
-    )
+          )
+        ]
+      >>= updateRowsByColName
+        [ (1 /\ \_ → pure $ Nothing)
+        ]
+      -- >>= changeSortOrder [ "string" /\ true ]
+      >>= updateRowsByColName
+        [ ( 1 /\ \_ → pure <<< Just $ M.fromArray
+              [ "bool" /\ ColBool false
+              , "string" /\ colString' "Text"
+              , "int" /\ colInt' 1
+              , "date" /\ colDate' instant
+              ]
+          )
+        ]
+      >>= bind docBody <<< appendChild

@@ -165,8 +165,8 @@ foldWithItemCountM f init = map snd <<< foldM
   )
   (0 /\ init)
 
-traverseWithItemCount_ :: forall f m a b. Foldable f => Monad m => (Int -> a -> m b) -> f a -> m Unit
-traverseWithItemCount_ f = void <<< foldM (\ acc item ->
+traverseWithItemCount_ ∷ ∀ f m a b. Foldable f ⇒ Monad m ⇒ (Int → a → m b) → f a → m Unit
+traverseWithItemCount_ f = void <<< foldM (\ acc item →
       f acc item *> pure (acc + 1)
     ) 0
 
@@ -180,11 +180,11 @@ sortTable
 sortTable table = do
   tableBody ← liftEffect $ _getDataTableBody table
   sortOrder ← getSortOrder table
-  mRowCountClassNames <- getRowCountColumnClasses table
+  mRowCountClassNames ← getRowCountColumnClasses table
   liftEffect (_getTableData table)
     >>= MM.freeze
     >>=
-      traverseWithItemCount_ (\ cnt tRow -> do
+      traverseWithItemCount_ (\ cnt tRow → do
           let row = fst tRow
           maybe
             (pure unit)
@@ -192,7 +192,7 @@ sortTable table = do
                 $ firstChild row
                     >>= maybe
                       (liftEffect <<< throwException $ error "Programmatic error! Flog the developer!")
-                      (\ child ->
+                      (\ child →
                         tx (show $ cnt + 1)
                           >>= bind (empty child) <<< appendChild
                       )
@@ -411,7 +411,7 @@ updateRows
 updateRows f g updateFs table = do
   colSpecs ← liftEffect $ _getColSpecs table
   tableData ← liftEffect $ _getTableData table
-  mRowCountClassNames <- getRowCountColumnClasses table
+  mRowCountClassNames ← getRowCountColumnClasses table
   traverse_
     ( \(key /\ updateF) → do
         mRowData ← MM.lookup key tableData
@@ -421,7 +421,7 @@ updateRows f g updateFs table = do
             (MM.delete key tableData)
             ( \newArrayedData → do
                 let newRowData = g colSpecs newArrayedData
-                newRowUi ← tr [] <<< (maybe identity (\ classNames -> cons (td (classAttr classNames []) [] # ndM)) mRowCountClassNames) $ foldl
+                newRowUi ← tr [] <<< (maybe identity (\ classNames → cons (td (classAttr classNames []) [] # ndM)) mRowCountClassNames) $ foldl
                   ( \acc (name /\ (colSpec /\ _)) →
                       snoc acc
                         ( td
@@ -511,5 +511,5 @@ foldTableDataM f a table =
     >>= MM.freeze
     >>= foldWithIndexM (\ k acc (_ /\ v) → f k acc v) a
 
-size ∷ ∀ m k a f1 f2. MonadEffect m => UISortableTable k a f1 f2 -> m Int
+size ∷ ∀ m k a f1 f2. MonadEffect m ⇒ UISortableTable k a f1 f2 → m Int
 size table = MM.size =<< liftEffect (_getTableData table)
