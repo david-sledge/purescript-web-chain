@@ -12,6 +12,10 @@ module Web.Chain.CSSOM
   , hideM
   , reveal
   , revealM
+  , rmCss
+  , rmCssM
+  , rmCssProp
+  , rmCssPropM
   , setCss
   , setCssM
   , setCssProp
@@ -19,7 +23,8 @@ module Web.Chain.CSSOM
   , show
   , showM
   , styleAttr
-  ) where
+  )
+  where
 
 import Prelude hiding (add, show)
 
@@ -30,7 +35,7 @@ import Data.Maybe (Maybe(..))
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
-import Web.CSSOM.Lifted.CSSStyleDeclaration (getPropertyValue, setProperty)
+import Web.CSSOM.Lifted.CSSStyleDeclaration (getPropertyValue, removeProperty, setProperty)
 import Web.CSSOM.Window (getDefaultComputedStyle)
 import Web.DOM.Class.ElementOp (class ElementOp, classList)
 import Web.DOM.DOMTokenList (add)
@@ -53,6 +58,20 @@ setCss cssProps n = traverse_ (\(name /\ val) → setCssProp name val n) cssProp
 
 setCssM ∷ ∀ m n f. MonadEffect m ⇒ HTMLElementOp n ⇒ Foldable f ⇒ f (String /\ String) → m n → m n
 setCssM = bindFlipped <<< setCss
+
+rmCssProp ∷ ∀ m n. MonadEffect m ⇒ HTMLElementOp n ⇒ String → n → m n
+rmCssProp name n = do
+  style n >>= removeProperty name
+  pure n
+
+rmCssPropM ∷ ∀ m n. MonadEffect m ⇒ HTMLElementOp n ⇒ String → m n → m n
+rmCssPropM = bindFlipped <<< rmCssProp
+
+rmCss ∷ ∀ m n f. MonadEffect m ⇒ HTMLElementOp n ⇒ Foldable f ⇒ f String → n → m n
+rmCss names n = traverse_ (flip rmCssProp n) names *> pure n
+
+rmCssM ∷ ∀ m n f. MonadEffect m ⇒ HTMLElementOp n ⇒ Foldable f ⇒ f String → m n → m n
+rmCssM = bindFlipped <<< rmCss
 
 conceal ∷ ∀ m n. MonadEffect m ⇒ HTMLElementOp n ⇒ n → m n
 conceal n =
