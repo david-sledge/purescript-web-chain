@@ -24,71 +24,7 @@ Web Chain is a library to simplify DOM manipulation. To create the following pag
 </div>
 ```
 
-using the [DOM API](https://www.w3.org/TR/REC-DOM-Level-1/cover.html) would result in:
-
-```purescript
-snippetFromPurescriptLandingPage :: Effect Node
-snippetFromPurescriptLandingPage = do
-  win <- window
-  htmlDoc <- document win
-  let doc = toDocument htmlDoc
-      newElem tag = Web.DOM.Element.toNode <$> createElement tag doc
-      newText string = Web.DOM.Text.toNode <$> createTextNode string doc
-  div <- newElem "div"
-  h3 <- newElem "h3"
-  appendChild h3 div
-  text <- newText "Benefits"
-  appendChild text h3
-  let newUl = newElem "ul"
-  ulOuter <- newUl
-  appendChild ulOuter div
-  let newLi = newElem "li"
-  liOuter <- newLi
-  appendChild liOuter ulOuter
-  text <- newText "Compile to readable JavaScript and reuse existing JavaScript code easily"
-  appendChild text liOuter
-  liOuter <- newLi
-  appendChild liOuter ulOuter
-  text <- newText "An extensive collection of libraries for development of web applications, web servers, apps and more"
-  appendChild text liOuter
-  liOuter <- newLi
-  appendChild liOuter ulOuter
-  text <- newText "Excellent tooling and editor support with instant rebuilds"
-  appendChild text liOuter
-  liOuter <- newLi
-  appendChild liOuter ulOuter
-  text <- newText "An active community with many learning resources"
-  appendChild text liOuter
-  liOuter <- newLi
-  appendChild liOuter ulOuter
-  text <- newText "Build real-world applications using functional techniques and expressive types, such as:"
-  appendChild text liOuter
-  ulInner <- newUl
-  appendChild ulInner liOuter
-  liInner <- newLi
-  appendChild liInner ulInner
-  text <- newText "Algebraic data types and pattern matching"
-  appendChild text liInner
-  liInner <- newLi
-  appendChild liInner ulInner
-  text <- newText "Row polymorphism and extensible records"
-  appendChild text liInner
-  liInner <- newLi
-  appendChild liInner ulInner
-  text <- newText "Higher kinded types"
-  appendChild text liInner
-  liInner <- newLi
-  appendChild liInner ulInner
-  text <- newText "Type classes with functional dependencies"
-  appendChild text liInner
-  liInner <- newLi
-  appendChild liInner ulInner
-  text <- newText "Higher-rank polymorphism"
-  appendChild text liInner
-  pure div
-```
-
-Web Chain condenses it to:
+Web Chain allows it to be written as:
 
 ```purescript
 snippetFromPurescriptLandingPageWithWebChain :: Effect Node
