@@ -1,7 +1,7 @@
 workspace:
   extra_packages: {}
   package_set:
-    registry: 50.11.0
+    registry: 64.10.0
 package:
   dependencies:
   - arrays
