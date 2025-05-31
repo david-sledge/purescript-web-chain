@@ -4,7 +4,7 @@ module Main
 
 import Prelude
 
-import Data.Maybe (maybe)
+import Data.Maybe (Maybe(Just), maybe)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (liftEffect)
@@ -12,8 +12,9 @@ import Effect.Console (log)
 import Effect.Exception (error, throwException)
 import Web.Chain.DOM (doc, el, eln, empty, nd, ndM, txn, (+<), (+<<))
 import Web.Chain.Event (changeM, onChange, onReady_)
-import Web.Chain.HTML (button, textField, val)
-import Web.Event.Class.EventTargetOp (allOff)
+import Web.Chain.HTML (button, textField)
+import Web.Chain.HTML.Class.HTMLAbleOp (disable)
+import Web.Chain.HTML.Class.HTMLValueContainerOp (val)
 import Web.HTML.HTMLDocument (body)
 
 main ∷ Effect Unit
@@ -22,7 +23,7 @@ main = onReady_ $ \_ → do
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
     ( \bodyElem → do
-        nameField ← textField ""
+        nameField ← textField [] ""
         welcomeMessageArea ← el "div" [] [ txn "This should never be displayed because nameField's change listener is immediately triggered below (changeM)" ]
         {--
       <body>
@@ -40,7 +41,7 @@ main = onReady_ $ \_ → do
               [ txn "Hello, World!"
               , eln "br" [] []
               , txn "What's your name? "
-              , ndM $ nameField
+              , nameField
                   # onChange
                       ( const do
                           value ← val nameField
@@ -52,12 +53,14 @@ main = onReady_ $ \_ → do
                             ]
                       )
                   # changeM
+                  # ndM
               , nd welcomeMessageArea
-              , ndM $ button [ txn "Stop Greeting Me" ]
-                  ( const do
-                      void $ allOff nameField
-                      empty welcomeMessageArea
-                  )
+              , ( button [] [ txn "Stop Greeting Me" ] $ Just \btn → const do
+                    empty welcomeMessageArea # void
+                    disable nameField # void
+                    disable btn
+                )
+                  # ndM
               ]
           ]
         pure unit

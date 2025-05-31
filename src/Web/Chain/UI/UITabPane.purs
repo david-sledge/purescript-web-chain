@@ -6,8 +6,8 @@ module Web.Chain.UI.UITabPane
 
 import Prelude
 
-import Data.Array.Mutable as A
-import Data.Foldable (class Foldable, null, traverse_)
+import Data.Array.Effect as A
+import Data.Foldable (class Foldable, traverse_)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Class (class MonadEffect)
 import Unsafe.Reference (unsafeRefEq)
@@ -50,36 +50,56 @@ mkTabPanes
   → TabPaneClassNames f2 f3 f4 f5 f6
   → m (Element /\ HTMLDivElement)
 mkTabPanes details classNames = do
-  tabs ← el "nav" [ "role" /\ "tablist" ] [] # C.addClassesM classNames.tabsContainer
+  tabs ← el "nav" ([ "role" /\ "tablist" ] # C.classAttr classNames.tabsContainer) []
   tabPanePairArray ← A.new
-  contentPanes ← H.div [] [] # C.addClassesM classNames.panesContainer
+  contentPanes ← H.div ([] # C.classAttr classNames.panesContainer) []
   traverse_
     ( \detail → do
         hasChildren ← hasChildNodes tabs
         let
           paneId = "nav-" <> detail.label
           tabId = paneId <> "-tab"
-        contentUi ← H.div [ "aria-labelledby" /\ tabId, "id" /\ paneId, "role" /\ "tabpanel", "tabindex" /\ "0" ] [ detail.content ]
-          # C.addClassesM classNames.panes
-          # if hasChildren then C.hideM else C.showM
+        contentUi ←
+          H.div
+            ( [ "aria-labelledby" /\ tabId
+              , "id" /\ paneId
+              , "role" /\ "tabpanel"
+              , "tabindex" /\ "0"
+              ]
+                # C.classAttr classNames.panes
+            )
+            [ detail.content ]
+            # if hasChildren then C.hideM else C.showM
         appendChild contentUi $ toNode contentPanes
-        tabUi ← el "button" [ "aria-controls" /\ paneId, "aria-selected" /\ (if hasChildren then "false" else "true"), "data-bs-target" /\ ("#nav-" <> detail.label), "data-bs-toggle" /\ "tab", "id" /\ tabId, "role" /\ "tab", "type" /\ "button" ] [ detail.tab ]
-          # C.addClassesM classNames.allTabs
-          # onM "click" \_ → do
-              -- iterate through content panes
-              traverse_
-                ( \(tab /\ pane) → do
-                    ( let
-                        toggle f bs g = do
-                          traverse_ (bind (classList tab) <<< flip f) classNames.activeTab
-                          _ ← setAttrs [ "aria-selected" /\ bs ] tab
-                          g pane
-                      in
-                        if unsafeRefEq pane contentUi then toggle D.add "true" C.show
-                        else toggle D.remove "false" C.hide
-                    )
-                ) =<< A.freeze tabPanePairArray
-        when (hasChildren && not (null classNames.activeTab)) <<< void $ C.addClasses classNames.activeTab tabUi
+        tabUi ←
+          el
+            "button"
+            ( [ "aria-controls" /\ paneId
+              , "aria-selected" /\ (if hasChildren then "false" else "true")
+              , "data-bs-target" /\ ("#nav-" <> detail.label)
+              , "data-bs-toggle" /\ "tab"
+              , "id" /\ tabId
+              , "role" /\ "tab"
+              , "type" /\ "button"
+              ]
+                # C.classAttr classNames.allTabs
+            )
+            [ detail.tab ]
+            # onM "click" \_ → do
+                -- iterate through content panes
+                traverse_
+                  ( \(tab /\ pane) → do
+                      ( let
+                          toggle f bs g = do
+                            traverse_ (bind (classList tab) <<< flip f) classNames.activeTab
+                            _ ← setAttrs [ "aria-selected" /\ bs ] tab
+                            g pane
+                        in
+                          if unsafeRefEq pane contentUi then toggle D.add "true" C.show
+                          else toggle D.remove "false" C.hide
+                      )
+                  ) =<< A.freeze tabPanePairArray
+        when (not hasChildren) <<< void $ C.addClasses classNames.activeTab tabUi
         A.push (tabUi /\ contentUi) tabPanePairArray
         appendChild tabUi $ toNode tabs
     )

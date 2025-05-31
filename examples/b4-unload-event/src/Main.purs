@@ -8,7 +8,8 @@ import Effect.Class (liftEffect)
 import Effect.Exception (error, throwException)
 import Web.Chain.DOM (doc, eln, ndM, txn, (+<))
 import Web.Chain.Event (onReady_)
-import Web.Chain.HTML (textField, val)
+import Web.Chain.HTML (textField)
+import Web.Chain.HTML.Class.HTMLValueContainerOp (val)
 import Web.Event.Class.EventTargetOp (offM, on, onM)
 import Web.Event.Event (Event, preventDefault)
 import Web.HTML (window)
@@ -28,17 +29,19 @@ main = onReady_ $ \_ →
   (liftEffect $ body =<< doc) >>= maybe
     (liftEffect <<< throwException $ error "No document body")
     ( \bodyElem → do
-        nameInput ← textField ""
+        nameInput ← textField [] ""
         _ ← bodyElem +<
           [ eln "h1" [] [ txn "BeforeUnloadEvent" ]
-          , ndM $ nameInput # on "input"
-              ( \_ → do
-                  value ← val nameInput
-                  window #
-                    ( if value == "" then offM
-                      else onM
-                    ) "beforeunload" beforeUnloadHandler
-              )
+          , nameInput
+              # on "input"
+                  ( \_ → do
+                      value ← val nameInput
+                      window #
+                        ( if value == "" then offM
+                          else onM
+                        ) "beforeunload" beforeUnloadHandler
+                  )
+              # ndM
           ]
         pure unit
     )

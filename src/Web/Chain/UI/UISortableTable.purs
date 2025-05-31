@@ -1,25 +1,30 @@
 module Web.Chain.UI.UISortableTable
   ( ColSpec
-  , SortableTable
+  , UISortableTable
   , changeSortOrder
   , clearTable
+  , foldTableDataM
   , getColumnNames
+  , getRowCountColumnClasses
   , getSortOrder
   , mkSortableTable
   , mkSortableTableNoNames
+  , size
   , sortTable
-  , updateRowsByColPos
   , updateRowsByColName
-  ) where
+  , updateRowsByColPos
+  )
+  where
 
-import Prelude
+import Prelude hiding (div)
 
 import Data.Array (drop, cons, snoc, sortBy)
 import Data.Foldable (class Foldable, foldM, foldl, indexl, lookup, traverse_)
+import Data.FoldableWithIndex (foldWithIndexM)
 import Data.HashMap as M
 import Data.HashSet as S
 import Data.Hashable (class Hashable)
-import Data.Map.Mutable as MM
+import Data.Map.Effect as MM
 import Data.Maybe (Maybe, maybe)
 import Data.Number (pow)
 import Data.Int (toNumber)
@@ -28,113 +33,172 @@ import Data.Tuple (fst, snd)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Exception (error, throwException)
 import Unsafe.Coerce (unsafeCoerce)
-import Web.Chain (class EventTargetOp, appendNodesM, el, eln, empty, nd, ndM, onM, remove, txn)
-import Web.Chain.CSSOM (addClassesM, conceal, revealM, setCssPropM)
-import Web.Chain.HTML (td, tr)
+import Web.Chain (class EventTargetOp, appendNodesM, el, eln, empty, nd, ndM, onM, remove, tx, txn)
+import Web.Chain.CSSOM (classAttr, conceal, revealM, setCssPropM, styleAttr)
+import Web.Chain.HTML (div, span, table, td, th, tr)
 import Web.DOM (Element, Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
-import Web.DOM.Class.NodeOp (class NodeOp, appendChild)
-import Web.HTML (HTMLElement, HTMLTableRowElement)
+import Web.DOM.Class.NodeOp (class NodeOp, appendChild, firstChild)
+import Web.HTML (HTMLSpanElement, HTMLTableRowElement)
 import Web.HTML.Class.HTMLElementOp (class HTMLElementOp)
 
-foreign import data SortableTable
+foreign import data UISortableTable
   ∷ Type
   → Type
   → (Type → Type)
   → (Type → Type)
   → Type
 
-instance EventTargetOp (SortableTable k a f1 f2) where
+instance EventTargetOp (UISortableTable k a f1 f2) where
   toEventTarget = unsafeCoerce
 
-instance NodeOp (SortableTable k a f1 f2) where
+instance NodeOp (UISortableTable k a f1 f2) where
   toNode = unsafeCoerce
 
-instance ElementOp (SortableTable k a f1 f2) where
+instance ElementOp (UISortableTable k a f1 f2) where
   toElement = unsafeCoerce
 
-instance HTMLElementOp (SortableTable k a f1 f2) where
+instance HTMLElementOp (UISortableTable k a f1 f2) where
   toHTMLElement = unsafeCoerce
 
 type ColSpec k a f1 f2 =
   { classNames ∷ f1 String
-  , formatter ∷ k → Maybe a → SortableTable k a f1 f2 → Effect Node
+  , formatter ∷ k → Maybe a → UISortableTable k a f1 f2 → Effect Node
   , heading ∷ (Effect Node /\ f2 String)
   }
 
 foreign import _setColSpecs
   ∷ ∀ k a f1 f2
-  . Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement))
-  → SortableTable k a f1 f2
+  . Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement))
+  → UISortableTable k a f1 f2
   → Effect Unit
 
 foreign import _getColSpecs
   ∷ ∀ k a f1 f2
-  . SortableTable k a f1 f2
-  → Effect (Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement)))
+  . UISortableTable k a f1 f2
+  → Effect (Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement)))
 
 foreign import _setDataTableBody
   ∷ ∀ k a f1 f2
   . Element
-  → SortableTable k a f1 f2
+  → UISortableTable k a f1 f2
   → Effect Unit
 
 foreign import _getDataTableBody
   ∷ ∀ k a f1 f2
-  . SortableTable k a f1 f2
+  . UISortableTable k a f1 f2
   → Effect (Element)
 
 foreign import _setSortOrder
   ∷ ∀ k a f1 f2
   . Array (String /\ Boolean)
-  → SortableTable k a f1 f2
+  → UISortableTable k a f1 f2
   → Effect Unit
 
 foreign import _getSortOrder
   ∷ ∀ k a f1 f2
-  . SortableTable k a f1 f2
+  . UISortableTable k a f1 f2
   → Effect (Array (String /\ Boolean))
 
 foreign import _setTableData
   ∷ ∀ k a f1 f2
-  . MM.MMap k (HTMLTableRowElement /\ M.HashMap String a)
-  → SortableTable k a f1 f2
+  . MM.EffectMap k (HTMLTableRowElement /\ M.HashMap String a)
+  → UISortableTable k a f1 f2
   → Effect Unit
 
 foreign import _getTableData
   ∷ ∀ k a f1 f2
-  . SortableTable k a f1 f2
-  → Effect (MM.MMap k (HTMLTableRowElement /\ M.HashMap String a))
+  . UISortableTable k a f1 f2
+  → Effect (MM.EffectMap k (HTMLTableRowElement /\ M.HashMap String a))
+
+foreign import _setRowCountColumnClasses
+  ∷ ∀ k a f1 f2
+  . Maybe (Array String)
+  → UISortableTable k a f1 f2
+  → Effect Unit
+
+foreign import _getRowCountColumnClasses
+  ∷ ∀ k a f1 f2
+  . UISortableTable k a f1 f2
+  → Effect (Maybe (Array String))
 
 getSortOrder
   ∷ ∀ m k a f1 f2
   . MonadEffect m
-  ⇒ SortableTable k a f1 f2
+  ⇒ UISortableTable k a f1 f2
   → m (Array (String /\ Boolean))
 getSortOrder table = liftEffect $ _getSortOrder table
 
 getColumnNames
   ∷ ∀ m k a f1 f2
   . MonadEffect m
-  ⇒ SortableTable k a f1 f2
+  ⇒ UISortableTable k a f1 f2
   → m (Array String)
 getColumnNames table = liftEffect $ map fst <$> _getColSpecs table
+
+getRowCountColumnClasses
+  ∷ ∀ m k a f1 f2
+  . MonadEffect m
+  ⇒ UISortableTable k a f1 f2
+  → m (Maybe (Array String))
+getRowCountColumnClasses table = liftEffect $ _getRowCountColumnClasses table
+
+foldlWithItemCount ∷ ∀ b f a. Foldable f ⇒ (Int → b → a → b) → b → f a → b
+foldlWithItemCount f init = snd <<< foldl
+  (\(cnt /\ acc) item → ((cnt + 1) /\ f cnt acc item))
+  (0 /\ init)
+
+foldWithItemCountM
+  ∷ ∀ b f a m
+  . Monad m
+  ⇒ Foldable f
+  ⇒ (Int → b → a → m b)
+  → b
+  → f a
+  → m b
+foldWithItemCountM f init = map snd <<< foldM
+  ( \(cnt /\ acc) item → do
+      acc' ← f cnt acc item
+      pure ((cnt + 1) /\ acc')
+  )
+  (0 /\ init)
+
+traverseWithItemCount_ ∷ ∀ f m a b. Foldable f ⇒ Monad m ⇒ (Int → a → m b) → f a → m Unit
+traverseWithItemCount_ f = void <<< foldM (\ acc item →
+      f acc item *> pure (acc + 1)
+    ) 0
 
 sortTable
   ∷ ∀ m k a f1 f2
   . MonadEffect m
   ⇒ Hashable k
   ⇒ Ord a
-  ⇒ SortableTable k a f1 f2
-  → m (SortableTable k a f1 f2)
+  ⇒ UISortableTable k a f1 f2
+  → m (UISortableTable k a f1 f2)
 sortTable table = do
   tableBody ← liftEffect $ _getDataTableBody table
   sortOrder ← getSortOrder table
+  mRowCountClassNames ← getRowCountColumnClasses table
   liftEffect (_getTableData table)
     >>= MM.freeze
     >>=
-      traverse_ (flip appendChild tableBody <<< fst)
+      traverseWithItemCount_ (\ cnt tRow → do
+          let row = fst tRow
+          maybe
+            (pure unit)
+            ( const
+                $ firstChild row
+                    >>= maybe
+                      (liftEffect <<< throwException $ error "Programmatic error! Flog the developer!")
+                      (\ child →
+                        tx (show $ cnt + 1)
+                          >>= bind (empty child) <<< appendChild
+                      )
+            ) mRowCountClassNames
+          appendChild row tableBody
+        )
         <<< sortBy
           ( \(_ /\ rowData1) (_ /\ rowData2) →
               let
@@ -175,14 +239,14 @@ changeSortOrder
   ⇒ Ord a
   ⇒ Foldable f3
   ⇒ f3 (String /\ Boolean)
-  → SortableTable k a f1 f2
-  → m (SortableTable k a f1 f2)
+  → UISortableTable k a f1 f2
+  → m (UISortableTable k a f1 f2)
 changeSortOrder newOrder table = do
   colSpecs ← liftEffect $ _getColSpecs table
-  (newSortOrder /\ nameSet) <- foldWithItemCountM
+  (newSortOrder /\ nameSet) ← foldWithItemCountM
     ( \cnt (sortOrder /\ set) (name /\ dir) →
         maybe (pure $ sortOrder /\ set)
-          ( \(_ /\ sortDirUi) ->
+          ( \(_ /\ sortDirUi) →
               if S.member name set then pure $ sortOrder /\ set
               else do
                 void $ empty sortDirUi
@@ -195,74 +259,58 @@ changeSortOrder newOrder table = do
     ([] /\ S.empty)
     newOrder
   traverse_
-    ( \(name /\ (_ /\ sortDirUi)) ->
+    ( \(name /\ (_ /\ sortDirUi)) →
         unless (S.member name nameSet) <<< void $ conceal sortDirUi
     )
     colSpecs
   liftEffect $ _setSortOrder newSortOrder table
   sortTable table
 
-foldlWithItemCount ∷ ∀ b f a. Foldable f ⇒ (Int → b → a → b) → b → f a → b
-foldlWithItemCount f init = snd <<< foldl
-  (\(cnt /\ acc) item → ((cnt + 1) /\ f cnt acc item))
-  (0 /\ init)
-
-foldWithItemCountM
-  ∷ ∀ b f a m
-  . Monad m
-  ⇒ Foldable f
-  ⇒ (Int → b → a → m b)
-  → b
-  → f a
-  → m b
-foldWithItemCountM f init = map snd <<< foldM
-  ( \(cnt /\ acc) item → do
-      acc' ← f cnt acc item
-      pure ((cnt + 1) /\ acc')
-  )
-  (0 /\ init)
-
 mkSortableTable_
   ∷ ∀ m k a f1 f2 f3 f4
-   . MonadEffect m
-  => Hashable k
-  => Ord a
-  => Foldable f2
-  => Foldable f3
-  => Foldable f4
-  => (String -> Int -> Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement)) -> String)
-  -> f3 String
-  -> f4 (String /\ ColSpec k a f1 f2)
-  -> m (SortableTable k a f1 f2)
-mkSortableTable_ f classNames colSpecs = do
-  tr ← el "tr" [] []
+  . MonadEffect m
+  ⇒ Hashable k
+  ⇒ Ord a
+  ⇒ Foldable f2
+  ⇒ Foldable f3
+  ⇒ Foldable f4
+  ⇒ (String → Int → Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement)) → String)
+  → f3 String
+  → Maybe (Array String)
+  → f4 (String /\ ColSpec k a f1 f2)
+  → m (UISortableTable k a f1 f2)
+mkSortableTable_ f classNames mRowCountClassNames colSpecs = do
+  tRow ← tr [] (maybe [] (const $ [ th [] [] # ndM ]) mRowCountClassNames)
   tableBody ← el "tbody" [] []
-  table ←
-    unsafeCoerce <$> el "table" []
-      [ eln "thead" []
-          [ nd tr
-          ]
-      , nd tableBody
-      ] # addClassesM classNames
+  tbl ← unsafeCoerce <$> table ([] # classAttr classNames)
+    [ eln "thead" []
+        [ nd tRow
+        ]
+    , nd tableBody
+    ]
   (sortOrder /\ newColSpecs) ←
     foldWithItemCountM
       ( \col (sortOrder /\ colSpecs') (name /\ colSpec) → do
-          sortDirUi <- el "span" [] [ txn "\x25b2" ]
-          el
-            "th"
-            []
-            [ liftEffect $ fst colSpec.heading, eln "span" [] [ txn " " ], nd sortDirUi ]
-            # addClassesM (snd colSpec.heading)
+          sortDirUi ← span ([] # styleAttr [ "opacity" /\ (show $ 0.9 / (pow 2.0 $ toNumber col) + 0.1) ]) [ txn "\x25b2" ]
+          th
+            (classAttr (snd colSpec.heading) [])
+            [ div (styleAttr [ "display" /\ "inline-flex", "align-items" /\ "end" ] [])
+                [ div [] [ liftEffect $ fst colSpec.heading ] # ndM
+                , span (styleAttr [ "white-space" /\ "pre" ] []) [ txn " " ] # ndM
+                , nd sortDirUi
+                ]
+                # ndM
+            ]
             # onM "click"
                 ( const do
-                    sortOrder' ← getSortOrder table
-                    let changeSort sort = void $ changeSortOrder sort table
+                    sortOrder' ← getSortOrder tbl
+                    let changeSort sort = void $ changeSortOrder sort tbl
                     maybe
                       (changeSort [ name /\ true ])
                       ( \(name' /\ isAsc) →
                           if name == name'
                           -- when the column selected is already the primary sort column,
-                          -- whether it sorts ascending or descending is flipped
+                          -- the ascending/descending indicator is flipped
                           then changeSort <<< cons (name /\ not isAsc) $ drop 1 sortOrder'
                           -- otherwise, the clicked column is becomes the primary sort column
                           -- without chaning ascending or descending
@@ -283,18 +331,19 @@ mkSortableTable_ f classNames colSpecs = do
                       )
                       $ indexl 0 sortOrder'
                 )
-            >>= flip appendChild tr
+            >>= (flip appendChild tRow)
           let name' = f name col colSpecs'
-          pure (snoc sortOrder (name' /\ true) /\ snoc colSpecs' (name' /\ (colSpec /\ unsafeCoerce sortDirUi)))
+          pure (snoc sortOrder (name' /\ true) /\ snoc colSpecs' (name' /\ (colSpec /\ sortDirUi)))
       )
       ([] /\ [])
       colSpecs
   tableData ← MM.new
-  liftEffect $ _setColSpecs newColSpecs table
-  liftEffect $ _setDataTableBody tableBody table
-  liftEffect $ _setSortOrder sortOrder table
-  liftEffect $ _setTableData tableData table
-  pure table
+  liftEffect $ _setColSpecs newColSpecs tbl
+  liftEffect $ _setDataTableBody tableBody tbl
+  liftEffect $ _setSortOrder sortOrder tbl
+  liftEffect $ _setTableData tableData tbl
+  liftEffect $ _setRowCountColumnClasses mRowCountClassNames tbl
+  pure tbl
 
 mkSortableTable
   ∷ ∀ m k a f1 f2 f3 f4
@@ -305,9 +354,10 @@ mkSortableTable
   ⇒ Foldable f3
   ⇒ Foldable f4
   ⇒ f3 String
+  → Maybe (Array String)
   → f4 (String /\ ColSpec k a f1 f2)
-  → m (SortableTable k a f1 f2)
-mkSortableTable classNames colSpecs = mkSortableTable_
+  → m (UISortableTable k a f1 f2)
+mkSortableTable classNames mRowCountClassNames colSpecs = mkSortableTable_
   ( \name _ colSpecs' →
       maybe name
         ( \_ →
@@ -322,6 +372,7 @@ mkSortableTable classNames colSpecs = mkSortableTable_
         ) $ lookup name colSpecs'
   )
   classNames
+  mRowCountClassNames
   colSpecs
 
 mkSortableTableNoNames
@@ -333,10 +384,11 @@ mkSortableTableNoNames
   ⇒ Foldable f4
   ⇒ Foldable f3
   ⇒ f3 String
+  → Maybe (Array String)
   → f4 (String /\ ColSpec k a f1 f2)
-  → m (SortableTable k a f1 f2)
-mkSortableTableNoNames classNames colSpecs =
-  mkSortableTable_ (\_ col _ → "_" <> show col) classNames colSpecs
+  → m (UISortableTable k a f1 f2)
+mkSortableTableNoNames classNames mRowCountClassNames colSpecs =
+  mkSortableTable_ (\_ col _ → "_" <> show col) classNames mRowCountClassNames colSpecs
 
 updateRows
   ∷ ∀ m k a f1 f2 f3 b c
@@ -345,20 +397,21 @@ updateRows
   ⇒ Ord a
   ⇒ Foldable f1
   ⇒ Foldable f3
-  ⇒ ( Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement))
+  ⇒ ( Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement))
       → (HTMLTableRowElement /\ M.HashMap String a)
       → b
     )
-  → ( Array (String /\ (ColSpec k a f1 f2 /\ HTMLElement))
+  → ( Array (String /\ (ColSpec k a f1 f2 /\ HTMLSpanElement))
       → c
       → M.HashMap String a
     )
   → f3 (k /\ (Maybe b → Effect (Maybe c)))
-  → SortableTable k a f1 f2
-  → m (SortableTable k a f1 f2)
+  → UISortableTable k a f1 f2
+  → m (UISortableTable k a f1 f2)
 updateRows f g updateFs table = do
   colSpecs ← liftEffect $ _getColSpecs table
   tableData ← liftEffect $ _getTableData table
+  mRowCountClassNames ← getRowCountColumnClasses table
   traverse_
     ( \(key /\ updateF) → do
         mRowData ← MM.lookup key tableData
@@ -368,14 +421,13 @@ updateRows f g updateFs table = do
             (MM.delete key tableData)
             ( \newArrayedData → do
                 let newRowData = g colSpecs newArrayedData
-                newRowUi ← tr [] $ foldl
+                newRowUi ← tr [] <<< (maybe identity (\ classNames → cons (td (classAttr classNames []) [] # ndM)) mRowCountClassNames) $ foldl
                   ( \acc (name /\ (colSpec /\ _)) →
                       snoc acc
-                        ( ndM $
-                            td
-                              []
-                              [ liftEffect $ colSpec.formatter key (M.lookup name newRowData) table ]
-                              # addClassesM colSpec.classNames
+                        ( td
+                            (classAttr colSpec.classNames [])
+                            [ liftEffect $ colSpec.formatter key (M.lookup name newRowData) table ]
+                            # ndM
                         )
                   )
                   []
@@ -394,8 +446,8 @@ updateRowsByColPos
   ⇒ Foldable f1
   ⇒ Foldable f3
   ⇒ f3 (k /\ (Maybe (Array (Maybe a)) → Effect (Maybe (Array (Maybe a)))))
-  → SortableTable k a f1 f2
-  → m (SortableTable k a f1 f2)
+  → UISortableTable k a f1 f2
+  → m (UISortableTable k a f1 f2)
 updateRowsByColPos =
   updateRows
     ( \colSpecs (_ /\ rowData) →
@@ -430,18 +482,34 @@ updateRowsByColName
   ⇒ Foldable f1
   ⇒ Foldable f3
   ⇒ f3 (k /\ (Maybe (M.HashMap String a) → Effect (Maybe (M.HashMap String a))))
-  → SortableTable k a f1 f2
-  → m (SortableTable k a f1 f2)
+  → UISortableTable k a f1 f2
+  → m (UISortableTable k a f1 f2)
 updateRowsByColName = updateRows (const $ snd) (const $ identity)
 
 clearTable
   ∷ ∀ m k a f1 f2
   . MonadEffect m
-  ⇒ SortableTable k a f1 f2
-  → m (SortableTable k a f1 f2)
+  ⇒ UISortableTable k a f1 f2
+  → m (UISortableTable k a f1 f2)
 clearTable table = liftEffect do
   tableData ← _getTableData table
   MM.clear tableData
   tableBody ← _getDataTableBody table
   void $ empty tableBody
   pure table
+
+foldTableDataM
+  ∷ ∀ m b a f1 f2 k
+  . MonadEffect m
+  ⇒ Hashable k
+  ⇒ (k → b → M.HashMap String a → m b)
+  → b
+  → UISortableTable k a f1 f2
+  → m b
+foldTableDataM f a table =
+  liftEffect (_getTableData table)
+    >>= MM.freeze
+    >>= foldWithIndexM (\ k acc (_ /\ v) → f k acc v) a
+
+size ∷ ∀ m k a f1 f2. MonadEffect m ⇒ UISortableTable k a f1 f2 → m Int
+size table = MM.size =<< liftEffect (_getTableData table)

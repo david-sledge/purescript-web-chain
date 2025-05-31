@@ -1,58 +1,65 @@
 -- | Functions for specific types of HTML elements.
 module Web.Chain.HTML
-  ( button
-  , disable
+  ( SelectContent(..)
+  , button
+  , check
+  , checkbox
   , div
-  , enable
-  , isEnabled
+  , docBody
   , maxLen
   , minLen
+  , numberField
+  , passwordField
   , setAutocomplete
   , setLenLimits
+  , singleSelect
+  , span
   , table
   , td
   , textField
+  , th
   , tr
-  , val
-  , valM
-  ) where
+  , uncheck
+  )
+  where
 
 import Prelude
 
-import Control.Bind (bindFlipped)
+import Data.Array (snoc)
 import Data.Either (Either(Left, Right), either)
-import Data.Foldable (class Foldable, intercalate)
+import Data.Foldable (class Foldable, foldM, intercalate)
 import Data.Int (fromString, toNumber)
-import Data.List (List(Nil), (:))
+import Data.List ((:))
 import Data.List.Util (s)
-import Data.Maybe (Maybe(Nothing), fromMaybe, maybe)
+import Data.Maybe (Maybe(Just, Nothing), fromMaybe, maybe)
 import Data.Number.Format (toString)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (attrM, el, rmAttrM, setAttrsM)
+import Web.Chain.DOM (attrM, doc, el, eln, setAttrsM, txn)
+import Web.Chain.HTML.Util (testCoercion)
 import Web.DOM (Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
-import Web.Event.Class.EventTargetOp (onM)
+import Web.Event.Class.EventTargetOp (on)
 import Web.Event.Event (Event)
 import Web.HTML (HTMLButtonElement, HTMLInputElement)
-import Web.HTML.HTMLButtonElement as HB
+import Web.HTML.HTMLBodyElement as HBo
+import Web.HTML.HTMLButtonElement as HBu
 import Web.HTML.HTMLDivElement as HD
-import Web.HTML.HTMLInputElement (value)
-import Web.HTML.HTMLInputElement as HI
+import Web.HTML.HTMLInputElement as HIn
+import Web.HTML.HTMLSelectElement as HSe
+import Web.HTML.HTMLSpanElement as HSp
 import Web.HTML.HTMLTableCellElement as HTD
 import Web.HTML.HTMLTableElement as HT
 import Web.HTML.HTMLTableRowElement as HTR
+import Web.HTML.Lifted.HTMLDocument (body, setBody)
 
 -- | Create a plain ol' input field of type text with a default value.
-textField ∷ ∀ m. MonadEffect m ⇒ String → m HTMLInputElement
-textField defaultValue =
-  maybe
-    (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"input\" val' did not produce an HTMLInputElement")
-    pure <<<
-    HI.fromElement =<<
-    el "input" [ ("value" /\ defaultValue), ("type" /\ "text") ] []
+textField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → String → m HTMLInputElement
+textField attrs defaultValue =
+  (el "input" attrs [] # setAttrsM [ "type" /\ "text", "value" /\ defaultValue ])
+    >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
 
 {-
 text field functions:
@@ -73,23 +80,8 @@ isvalid
 setAutocomplete ∷ ∀ m. MonadEffect m ⇒ String → m HTMLInputElement → m HTMLInputElement
 setAutocomplete autocomplete mInput = do
   input ← mInput
-  liftEffect $ HI.setAutocomplete autocomplete input
+  liftEffect $ HIn.setAutocomplete autocomplete input
   pure input
-
--- | Enable an input. The input is returned.
-enable ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ m e → m e
-enable = rmAttrM "disabled"
-
--- | Disable an input. The input is returned.
-disable ∷ ∀ e m. ElementOp e ⇒ MonadEffect m ⇒ m e → m e
-disable = setAttrsM (s ("disabled" /\ "disabled"))
-
--- | Is this input enabled?
-isEnabled ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ m e → m Boolean
-isEnabled mInput =
-  maybe
-    (pure true)
-    (pure <<< (/=) "disabled") =<< attrM "disabled" mInput
 
 -- | Set the the range limits on the required number of characters of a text
 -- | field. The text field is returned.
@@ -126,36 +118,112 @@ maxLen mInput = maybe Nothing fromString <$> attrM "maxlength" mInput
 minLen ∷ ∀ m e. MonadEffect m ⇒ ElementOp e ⇒ m e → m Int
 minLen mInput = maybe 0 (fromMaybe 0 <<< fromString) <$> attrM "minlength" mInput
 
--- | Get the text from a text field.
-val ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m String
-val input = liftEffect $ value input
+-- | Create a plain ol' input field of type number with a default value.
+numberField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Maybe Number → m HTMLInputElement
+numberField attrs mDefaultValue =
+  (el "input" attrs [] # setAttrsM [ "type" /\ "number", "value" /\ (maybe "" show mDefaultValue) ])
+    >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
 
--- | Get the text from a text field.
-valM ∷ ∀ m. MonadEffect m ⇒ m HTMLInputElement → m String
-valM = bindFlipped val
+-- | Create a password text field.
+passwordField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → m HTMLInputElement
+passwordField attrs =
+  (el "input" attrs [] # setAttrsM [ "type" /\ "password" ])
+    >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
 
 -- | Create a button.
-button ∷ ∀ f m a. MonadEffect m ⇒ Foldable f ⇒ f (m Node) → (Event → Effect a) → m HTMLButtonElement
-button childNodesM click = do
-  element ← el "button" Nil childNodesM # onM "click" click
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"button\" click' did not produce an HTMLButtonElement") pure $ HB.fromElement element
+button ∷ ∀ m f1 f2 a. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → Maybe (HTMLButtonElement → Event → Effect a) → m HTMLButtonElement
+button attributes childNodesM mClick = do
+  btn ← el "button" attributes childNodesM >>=
+    testCoercion "button" "HTMLButtonElement" <<< HBu.fromElement
+  btn # maybe pure (on "click" <<< (#) btn) mClick
 
 div ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HD.HTMLDivElement
-div attributes children = do
-  element ← el "div" attributes children
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"div\"' did not produce an HTMLDivElement") pure $ HD.fromElement element
+div attributes children =
+  el "div" attributes children >>=
+    testCoercion "div" "HTMLDivElement" <<< HD.fromElement
+
+span ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HSp.HTMLSpanElement
+span attributes children =
+  el "span" attributes children >>=
+    testCoercion "span" "HTMLSpanElement" <<< HSp.fromElement
 
 tr ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTR.HTMLTableRowElement
-tr attributes children = do
-  element ← el "tr" attributes children
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"tr\"' did not produce an HTMLTableRowElement") pure $ HTR.fromElement element
+tr attributes children =
+  el "tr" attributes children >>=
+    testCoercion "tr" "HTMLTableRowElement" <<< HTR.fromElement
 
 td ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTD.HTMLTableCellElement
-td attributes children = do
-  element ← el "td" attributes children
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"td\"' did not produce an HTMLTableCellElement") pure $ HTD.fromElement element
+td attributes children =
+  el "td" attributes children >>=
+    testCoercion "td" "HTMLTableCellElement" <<< HTD.fromElement
+
+th ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTD.HTMLTableCellElement
+th attributes children =
+  el "th" attributes children >>=
+    testCoercion "th" "HTMLTableCellElement" <<< HTD.fromElement
 
 table ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HT.HTMLTableElement
-table attributes children = do
-  element ← el "tr" attributes children
-  maybe (liftEffect <<< throwException $ error "'Web.Chain.DOM.el \"table\"' did not produce an HTMLTableElement") pure $ HT.fromElement element
+table attributes children =
+  el "table" attributes children >>=
+    testCoercion "table" "HTMLTableElement" <<< HT.fromElement
+
+check ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m HTMLInputElement
+check checkbx = do
+  liftEffect $ HIn.setChecked true checkbx
+  pure checkbx
+
+uncheck ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m HTMLInputElement
+uncheck checkbx = do
+  liftEffect $ HIn.setChecked false checkbx
+  pure checkbx
+
+-- | Create a checkbox.
+checkbox ∷ ∀ m f a. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Boolean → Maybe (HTMLInputElement → Event → Effect a) → m HTMLInputElement
+checkbox attributes isChecked mChange = do
+  chk ← el "input" attributes []
+    >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
+    >>= if isChecked then check else uncheck
+  chk # maybe pure (on "change" <<< (#) chk) mChange # setAttrsM [ "type" /\ "checkbox" ]
+
+data SelectContent
+  = Option String String
+  | OptGroup String (Array (String /\ String))
+  | HR
+
+singleSelect ∷ ∀ m f1 f2.
+  MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒
+  f1 (String /\ String) → f2 (SelectContent) → Maybe String → m HSe.HTMLSelectElement
+singleSelect attributes content mInitial =
+  ( foldM (\ acc cntnt →
+      snoc
+        acc
+        ( case cntnt of
+          Option value label → eln "option"
+              ( if Just value == mInitial
+                then [ "value" /\ value, "selected" /\ "" ]
+                else [ "value" /\ value ]
+              ) [ txn label ]
+          OptGroup label options → foldM (\ acc' (value' /\ label') →
+                snoc acc' (eln "option"
+                    ( if Just value' == mInitial
+                      then [ "value" /\ value', "selected" /\ "" ]
+                      else [ "value" /\ value' ]
+                    ) [ txn label' ]) # pure
+              ) [] options >>= eln "optgroup" [ "label" /\ label ]
+          HR → eln "hr" [] []
+        )
+        # pure
+    ) [] content
+  )
+  >>= el "select" attributes
+  >>= testCoercion "select" "HTMLSelectElement" <<< HSe.fromElement
+
+docBody ∷ ∀ m. MonadEffect m ⇒ m HBo.HTMLBodyElement
+docBody = do
+  docu <- doc
+  body docu >>= maybe
+    ( do
+      bdy <- el "body" [] [] >>= testCoercion "body" "HTMLBodyElement" <<< HBo.fromElement
+      setBody bdy docu
+      pure bdy
+    ) pure
