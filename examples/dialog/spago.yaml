@@ -1,6 +1,0 @@
-package:
-  dependencies:
-    - console
-    - effect
-    - web-chain
-  name: dialog

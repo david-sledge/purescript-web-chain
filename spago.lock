@@ -20,10 +20,8 @@
             "enums",
             "exceptions",
             "exists",
-            "fixed-points",
             "foldable-traversable",
             "foreign",
-            "formatters",
             "functions",
             "functors",
             "gen",
@@ -42,7 +40,6 @@
             "numbers",
             "ordered-collections",
             "orders",
-            "parsing",
             "partial",
             "prelude",
             "profunctor",
@@ -57,7 +54,6 @@
             "type-equality",
             "typelevel-prelude",
             "unfoldable",
-            "unicode",
             "unordered-collections",
             "unsafe-coerce",
             "unsafe-reference",
@@ -100,10 +96,8 @@
             "enums",
             "exceptions",
             "exists",
-            "fixed-points",
             "foldable-traversable",
             "foreign",
-            "formatters",
             "functions",
             "functors",
             "gen",
@@ -122,7 +116,6 @@
             "numbers",
             "ordered-collections",
             "orders",
-            "parsing",
             "partial",
             "prelude",
             "profunctor",
@@ -137,7 +130,6 @@
             "type-equality",
             "typelevel-prelude",
             "unfoldable",
-            "unicode",
             "unordered-collections",
             "unsafe-coerce",
             "unsafe-reference",
@@ -178,10 +170,8 @@
             "enums",
             "exceptions",
             "exists",
-            "fixed-points",
             "foldable-traversable",
             "foreign",
-            "formatters",
             "functions",
             "functors",
             "gen",
@@ -200,7 +190,6 @@
             "numbers",
             "ordered-collections",
             "orders",
-            "parsing",
             "partial",
             "prelude",
             "profunctor",
@@ -215,7 +204,6 @@
             "type-equality",
             "typelevel-prelude",
             "unfoldable",
-            "unicode",
             "unordered-collections",
             "unsafe-coerce",
             "unsafe-reference",
@@ -258,10 +246,8 @@
             "enums",
             "exceptions",
             "exists",
-            "fixed-points",
             "foldable-traversable",
             "foreign",
-            "formatters",
             "functions",
             "functors",
             "gen",
@@ -280,7 +266,6 @@
             "numbers",
             "ordered-collections",
             "orders",
-            "parsing",
             "partial",
             "prelude",
             "profunctor",
@@ -295,7 +280,6 @@
             "type-equality",
             "typelevel-prelude",
             "unfoldable",
-            "unicode",
             "unordered-collections",
             "unsafe-coerce",
             "unsafe-reference",
@@ -338,10 +322,8 @@
             "enums",
             "exceptions",
             "exists",
-            "fixed-points",
             "foldable-traversable",
             "foreign",
-            "formatters",
             "functions",
             "functors",
             "gen",
@@ -360,7 +342,6 @@
             "numbers",
             "ordered-collections",
             "orders",
-            "parsing",
             "partial",
             "prelude",
             "profunctor",
@@ -375,7 +356,6 @@
             "type-equality",
             "typelevel-prelude",
             "unfoldable",
-            "unicode",
             "unordered-collections",
             "unsafe-coerce",
             "unsafe-reference",
@@ -498,6 +478,7 @@
         "path": "examples/tab-panes",
         "core": {
           "dependencies": [
+            "formatters",
             "prelude",
             "web-chain"
           ],
@@ -574,26 +555,63 @@
         "path": "./",
         "core": {
           "dependencies": [
-            "arrays",
-            "effect",
-            "either",
-            "exceptions",
-            "foldable-traversable",
-            "formatters",
-            "integers",
-            "lists",
-            "maybe",
-            "numbers",
-            "prelude",
-            "st",
-            "tuples",
-            "unordered-collections",
-            "unsafe-coerce",
-            "unsafe-reference",
-            "web-cssom",
-            "web-dom",
-            "web-events",
-            "web-html"
+            {
+              "arrays": ">=7.3.0 <8.0.0"
+            },
+            {
+              "effect": ">=4.0.0 <5.0.0"
+            },
+            {
+              "either": ">=6.1.0 <7.0.0"
+            },
+            {
+              "exceptions": ">=6.1.0 <7.0.0"
+            },
+            {
+              "foldable-traversable": ">=6.0.0 <7.0.0"
+            },
+            {
+              "integers": ">=6.0.0 <7.0.0"
+            },
+            {
+              "lists": ">=7.0.0 <8.0.0"
+            },
+            {
+              "maybe": ">=6.0.0 <7.0.0"
+            },
+            {
+              "numbers": ">=9.0.1 <10.0.0"
+            },
+            {
+              "prelude": ">=6.0.2 <7.0.0"
+            },
+            {
+              "st": ">=6.2.0 <7.0.0"
+            },
+            {
+              "tuples": ">=7.0.0 <8.0.0"
+            },
+            {
+              "unordered-collections": ">=3.1.0 <4.0.0"
+            },
+            {
+              "unsafe-coerce": ">=6.0.0 <7.0.0"
+            },
+            {
+              "unsafe-reference": ">=5.0.0 <6.0.0"
+            },
+            {
+              "web-cssom": ">=2.0.0 <3.0.0"
+            },
+            {
+              "web-dom": ">=6.0.0 <7.0.0"
+            },
+            {
+              "web-events": ">=4.0.0 <5.0.0"
+            },
+            {
+              "web-html": ">=4.1.1 <5.0.0"
+            }
           ],
           "build_plan": [
             "arrays",
@@ -608,10 +626,8 @@
             "enums",
             "exceptions",
             "exists",
-            "fixed-points",
             "foldable-traversable",
             "foreign",
-            "formatters",
             "functions",
             "functors",
             "gen",
@@ -630,7 +646,6 @@
             "numbers",
             "ordered-collections",
             "orders",
-            "parsing",
             "partial",
             "prelude",
             "profunctor",
@@ -645,7 +660,6 @@
             "type-equality",
             "typelevel-prelude",
             "unfoldable",
-            "unicode",
             "unordered-collections",
             "unsafe-coerce",
             "unsafe-reference",

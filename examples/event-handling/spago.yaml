@@ -1,7 +1,0 @@
-package:
-  dependencies:
-    - debug
-    - console
-    - effect
-    - web-chain
-  name: event-handling

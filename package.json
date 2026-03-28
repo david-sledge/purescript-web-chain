@@ -22,7 +22,8 @@
     "example-event-handling": "examples/bundle.sh event-handling",
     "example-sortable-table": "examples/bundle.sh sortable-table",
     "example-tab-panes": "examples/bundle.sh tab-panes",
-    "example-all": "npm run -s example-b4-unload-event && npm run -s example-basic && npm run -s example-dialog && npm run -s example-event-handling && npm run -s example-sortable-table && npm run -s example-tab-panes"
+    "example-all": "npm run -s example-b4-unload-event && npm run -s example-basic && npm run -s example-dialog && npm run -s example-event-handling && npm run -s example-sortable-table && npm run -s example-tab-panes",
+    "publish": "spago publish -p web-chain"
   },
   "devDependencies": {
     "bootstrap": "^5.3.8",

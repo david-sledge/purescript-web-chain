@@ -1,5 +1,0 @@
-package:
-  name: tab-panes
-  dependencies:
-  - prelude
-  - web-chain
