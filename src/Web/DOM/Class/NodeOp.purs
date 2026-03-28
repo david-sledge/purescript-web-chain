@@ -55,6 +55,7 @@ import Web.HTML.HTMLCanvasElement as HCa
 import Web.HTML.HTMLDListElement as HDL
 import Web.HTML.HTMLDataElement as HDE
 import Web.HTML.HTMLDataListElement as HDa
+import Web.HTML.HTMLDialogElement as HDia
 import Web.HTML.HTMLDivElement as HDv
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
@@ -174,6 +175,9 @@ instance NodeOp HDa.HTMLDataListElement where
 
 instance NodeOp HDv.HTMLDivElement where
   toNode = HDv.toNode
+
+instance NodeOp HDia.HTMLDialogElement where
+  toNode = HDia.toNode
 
 instance NodeOp HEm.HTMLEmbedElement where
   toNode = HEm.toNode

@@ -60,6 +60,7 @@ import Web.HTML.HTMLCanvasElement as HCa
 import Web.HTML.HTMLDListElement as HDL
 import Web.HTML.HTMLDataElement as HDE
 import Web.HTML.HTMLDataListElement as HDa
+import Web.HTML.HTMLDialogElement as HDia
 import Web.HTML.HTMLDivElement as HDv
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
@@ -184,6 +185,9 @@ instance EventTargetOp HDE.HTMLDataElement where
 
 instance EventTargetOp HDa.HTMLDataListElement where
   toEventTarget = HDa.toEventTarget
+
+instance EventTargetOp HDia.HTMLDialogElement where
+  toEventTarget = HDia.toEventTarget
 
 instance EventTargetOp HDv.HTMLDivElement where
   toEventTarget = HDv.toEventTarget
