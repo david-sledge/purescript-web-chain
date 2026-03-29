@@ -62,69 +62,10 @@
             {
               "web-html": ">=4.1.1 <5.0.0"
             }
-          ],
-          "build_plan": [
-            "arrays",
-            "bifunctors",
-            "const",
-            "contravariant",
-            "control",
-            "datetime",
-            "distributive",
-            "effect",
-            "either",
-            "enums",
-            "exceptions",
-            "exists",
-            "foldable-traversable",
-            "foreign",
-            "functions",
-            "functors",
-            "gen",
-            "identity",
-            "integers",
-            "invariant",
-            "js-date",
-            "lazy",
-            "lists",
-            "maybe",
-            "media-types",
-            "newtype",
-            "nonempty",
-            "now",
-            "nullable",
-            "numbers",
-            "ordered-collections",
-            "orders",
-            "partial",
-            "prelude",
-            "profunctor",
-            "record",
-            "refs",
-            "safe-coerce",
-            "st",
-            "strings",
-            "tailrec",
-            "transformers",
-            "tuples",
-            "type-equality",
-            "typelevel-prelude",
-            "unfoldable",
-            "unordered-collections",
-            "unsafe-coerce",
-            "unsafe-reference",
-            "web-cssom",
-            "web-dom",
-            "web-events",
-            "web-file",
-            "web-html",
-            "web-storage",
-            "web-uievents"
           ]
         },
         "test": {
-          "dependencies": [],
-          "build_plan": []
+          "dependencies": []
         }
       }
     },
@@ -949,13 +890,13 @@
       "dependencies": [
         "either",
         "functions",
-        "identity",
         "integers",
         "lists",
         "maybe",
         "prelude",
         "strings",
-        "transformers"
+        "transformers",
+        "unsafe-coerce"
       ]
     },
     "functions": {
@@ -1040,10 +981,12 @@
       "dependencies": [
         "datetime",
         "effect",
-        "exceptions",
+        "enums",
         "foreign",
+        "functions",
         "integers",
-        "now"
+        "maybe",
+        "prelude"
       ]
     },
     "lazy": {
@@ -1118,23 +1061,14 @@
         "unfoldable"
       ]
     },
-    "now": {
-      "type": "registry",
-      "version": "6.0.0",
-      "integrity": "sha256-mTyG4s8tps3XIf0jjV/lME2/QlwMzrQly2wqfSSUM3o=",
-      "dependencies": [
-        "datetime",
-        "effect"
-      ]
-    },
     "nullable": {
       "type": "registry",
       "version": "6.0.0",
       "integrity": "sha256-CDAZk+L9Sc0GCFTkE8n+qdp4Ys8avvnkU+m2hVALt7M=",
       "dependencies": [
-        "effect",
         "functions",
-        "maybe"
+        "maybe",
+        "prelude"
       ]
     },
     "numbers": {
@@ -1143,7 +1077,8 @@
       "integrity": "sha256-ZydYckgwRAnRaFC7pu6fADhzdwX+UqHZrfJyet64zls=",
       "dependencies": [
         "functions",
-        "maybe"
+        "maybe",
+        "prelude"
       ]
     },
     "ordered-collections": {
@@ -1152,13 +1087,16 @@
       "integrity": "sha256-NaEXc2cz/7lJfxPWEja4XlZbGxuRqJwFKQJjsJf51kQ=",
       "dependencies": [
         "arrays",
+        "control",
         "foldable-traversable",
+        "functions",
         "gen",
         "lists",
         "maybe",
+        "newtype",
         "partial",
         "prelude",
-        "st",
+        "safe-coerce",
         "tailrec",
         "tuples",
         "unfoldable"
@@ -1232,6 +1170,7 @@
       "version": "6.2.0",
       "integrity": "sha256-WI4MEkkwUd4pnwZQ3G8VKWgX5t1RSNJludm5e9boaRo=",
       "dependencies": [
+        "effect",
         "partial",
         "prelude",
         "tailrec",
@@ -1341,10 +1280,15 @@
       "integrity": "sha256-Q8jihSbzZXA57cEDVlwDHsNaDPJHPHkCLXklOn+FhdM=",
       "dependencies": [
         "arrays",
+        "either",
         "enums",
+        "foldable-traversable",
         "functions",
         "integers",
         "lists",
+        "maybe",
+        "newtype",
+        "partial",
         "prelude",
         "record",
         "tuples",
@@ -1371,6 +1315,11 @@
       "version": "2.0.0",
       "integrity": "sha256-kkLMzG8a3bmg7Zdehhr/sxhev/XLDG2ga59JewXgo5M=",
       "dependencies": [
+        "effect",
+        "maybe",
+        "nullable",
+        "prelude",
+        "unsafe-coerce",
         "web-dom",
         "web-html",
         "web-uievents"
@@ -1381,6 +1330,13 @@
       "version": "6.0.0",
       "integrity": "sha256-rVeqkxChkjqisDvOujy9BMEgGqJkwX3t6g21bXfiG5o=",
       "dependencies": [
+        "effect",
+        "enums",
+        "maybe",
+        "newtype",
+        "nullable",
+        "prelude",
+        "unsafe-coerce",
         "web-events"
       ]
     },
@@ -1390,9 +1346,15 @@
       "integrity": "sha256-wZNeldG0OU+8qGycUJ9e6vxf1/GC4Ep4OlRMhvjs9LA=",
       "dependencies": [
         "datetime",
+        "effect",
         "enums",
         "foreign",
-        "nullable"
+        "functions",
+        "maybe",
+        "newtype",
+        "nullable",
+        "prelude",
+        "unsafe-coerce"
       ]
     },
     "web-file": {
@@ -1400,9 +1362,21 @@
       "version": "4.0.0",
       "integrity": "sha256-txsdkeWBKU/+5v9m5c6kysgJQSDyV1r7MHaeT4STpjQ=",
       "dependencies": [
+        "datetime",
+        "effect",
+        "enums",
         "foreign",
+        "integers",
+        "maybe",
         "media-types",
-        "web-dom"
+        "nullable",
+        "numbers",
+        "partial",
+        "prelude",
+        "tuples",
+        "unfoldable",
+        "unsafe-coerce",
+        "web-events"
       ]
     },
     "web-html": {
@@ -1410,8 +1384,19 @@
       "version": "4.1.1",
       "integrity": "sha256-yOuZJGUxFrivHKpo/jKuKzFZaq6PPPE64ftSysXFssk=",
       "dependencies": [
+        "effect",
+        "enums",
+        "foreign",
+        "functions",
         "js-date",
+        "maybe",
+        "media-types",
+        "newtype",
+        "nullable",
+        "prelude",
+        "unsafe-coerce",
         "web-dom",
+        "web-events",
         "web-file",
         "web-storage"
       ]
@@ -1421,7 +1406,11 @@
       "version": "5.0.0",
       "integrity": "sha256-YJfos55oeKtBStNfoWfeflSy8j+4IDym5eaZtIY7YM4=",
       "dependencies": [
+        "effect",
+        "maybe",
         "nullable",
+        "prelude",
+        "unsafe-coerce",
         "web-events"
       ]
     },
@@ -1430,6 +1419,13 @@
       "version": "5.0.0",
       "integrity": "sha256-yh9uVLIGu8wE1+jwLehtfsRfR1eyiShhIMMhBPqKybE=",
       "dependencies": [
+        "effect",
+        "enums",
+        "maybe",
+        "nullable",
+        "prelude",
+        "unsafe-coerce",
+        "web-events",
         "web-html"
       ]
     }
