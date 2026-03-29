@@ -6,13 +6,17 @@ module Web.DOM.Class.NodeOp
   , childNodes
   , class NodeOp
   , clone
+  , compareDocumentPositionBits
   , contains
   , deepClone
   , firstChild
   , hasChildNodes
   , insertBefore
+  , isDefaultNamespace
   , isEqualNode
   , lastChild
+  , lookupNamespaceURI
+  , lookupPrefix
   , nextSibling
   , nodeName
   , nodeType
@@ -37,11 +41,13 @@ import Prelude
 import Data.Maybe (Maybe)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
-import Web.DOM (CharacterData, Document, Element, Node, NodeList, NodeType, Text)
+import Web.DOM (CharacterData, Comment, Document, Element, Node, NodeList, NodeType, Text)
 import Web.DOM.CharacterData as C
+import Web.DOM.Comment as Co
 import Web.DOM.Document as D
 import Web.DOM.Element as E
 import Web.DOM.Node as N
+import Web.DOM.ProcessingInstruction as P
 import Web.DOM.Text as T
 import Web.Event.Class.EventTargetOp (class EventTargetOp)
 import Web.HTML.HTMLAnchorElement as HAn
@@ -55,6 +61,7 @@ import Web.HTML.HTMLCanvasElement as HCa
 import Web.HTML.HTMLDListElement as HDL
 import Web.HTML.HTMLDataElement as HDE
 import Web.HTML.HTMLDataListElement as HDa
+import Web.HTML.HTMLDialogElement as HDia
 import Web.HTML.HTMLDivElement as HDv
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
@@ -120,6 +127,9 @@ instance NodeOp Node where
 instance NodeOp CharacterData where
   toNode = C.toNode
 
+instance NodeOp Comment where
+  toNode = Co.toNode
+
 instance NodeOp Document where
   toNode = D.toNode
 
@@ -136,6 +146,9 @@ instance NodeOp HD.HTMLDocument where
 
 instance NodeOp Text where
   toNode = T.toNode
+
+instance NodeOp P.ProcessingInstruction where
+  toNode = P.toNode
 
 --------------------------------------------------------------------------------
 -- great-grandchildren
@@ -174,6 +187,9 @@ instance NodeOp HDa.HTMLDataListElement where
 
 instance NodeOp HDv.HTMLDivElement where
   toNode = HDv.toNode
+
+instance NodeOp HDia.HTMLDialogElement where
+  toNode = HDia.toNode
 
 instance NodeOp HEm.HTMLEmbedElement where
   toNode = HEm.toNode
@@ -334,8 +350,8 @@ nodeTypeIndex = meh N.nodeTypeIndex
 nodeName ∷ ∀ n. NodeOp n ⇒ n → String
 nodeName = meh N.nodeName
 
-baseURI ∷ ∀ n. NodeOp n ⇒ n → Effect String
-baseURI = meh N.baseURI
+baseURI ∷ ∀ m n. MonadEffect m ⇒ NodeOp n ⇒ n → m String
+baseURI = mehM N.baseURI
 
 mehM ∷ ∀ (m ∷ Type → Type) (a ∷ Type) (n ∷ Type). MonadEffect m ⇒ NodeOp n ⇒ (Node → Effect a) → n → m a
 mehM = compose liftEffect <<< meh
@@ -394,6 +410,9 @@ deepClone = mehM N.deepClone
 isEqualNode ∷ ∀ m n1 n2. MonadEffect m ⇒ NodeOp n1 ⇒ NodeOp n2 ⇒ n1 → n2 → m Boolean
 isEqualNode = mehM <<< N.isEqualNode <<< toNode
 
+compareDocumentPositionBits ∷ ∀ m n1 n2. MonadEffect m ⇒ NodeOp n1 ⇒ NodeOp n2 ⇒ n1 → n2 → m Int
+compareDocumentPositionBits = mehM <<< N.compareDocumentPositionBits <<< toNode
+
 appendChild ∷ ∀ m p c. MonadEffect m ⇒ NodeOp c ⇒ NodeOp p ⇒ c → p → m Unit
 appendChild = mehM <<< N.appendChild <<< toNode
 
@@ -402,6 +421,15 @@ removeChild = mehM <<< N.removeChild <<< toNode
 
 contains ∷ ∀ m p c. MonadEffect m ⇒ NodeOp c ⇒ NodeOp p ⇒ c → p → m Boolean
 contains = mehM <<< N.contains <<< toNode
+
+lookupPrefix ∷ ∀ m n. MonadEffect m ⇒ NodeOp n ⇒ String → n → m (Maybe String)
+lookupPrefix = mehM1 N.lookupPrefix
+
+lookupNamespaceURI ∷ ∀ m n. MonadEffect m ⇒ NodeOp n ⇒ String → n → m (Maybe String)
+lookupNamespaceURI = mehM1 N.lookupNamespaceURI
+
+isDefaultNamespace ∷ ∀ m n. MonadEffect m ⇒ NodeOp n ⇒ String → n → m Boolean
+isDefaultNamespace = mehM1 N.isDefaultNamespace
 
 insertBefore ∷ ∀ m n1 n2 n3. MonadEffect m ⇒ NodeOp n1 ⇒ NodeOp n2 ⇒ NodeOp n3 ⇒ n1 → n2 → n3 → m Unit
 insertBefore n1 n2 = liftEffect <<< N.insertBefore (toNode n1) (toNode n2) <<< toNode

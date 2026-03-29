@@ -42,9 +42,11 @@ import Unsafe.Coerce (unsafeCoerce)
 import Unsafe.Reference (reallyUnsafeRefEq)
 import Web.DOM (CharacterData, Document, Text)
 import Web.DOM.CharacterData as C
+import Web.DOM.Comment as Co
 import Web.DOM.Document as D
 import Web.DOM.Element as E
 import Web.DOM.Node as N
+import Web.DOM.ProcessingInstruction as P
 import Web.DOM.Text as T
 import Web.Event.Event (Event, EventType(EventType))
 import Web.Event.EventTarget (EventTarget, addEventListenerWithOptions, dispatchEvent, eventListener)
@@ -60,6 +62,7 @@ import Web.HTML.HTMLCanvasElement as HCa
 import Web.HTML.HTMLDListElement as HDL
 import Web.HTML.HTMLDataElement as HDE
 import Web.HTML.HTMLDataListElement as HDa
+import Web.HTML.HTMLDialogElement as HDia
 import Web.HTML.HTMLDivElement as HDv
 import Web.HTML.HTMLDocument as HD
 import Web.HTML.HTMLElement as HE
@@ -130,6 +133,9 @@ instance EventTargetOp N.Node where
 instance EventTargetOp CharacterData where
   toEventTarget = C.toEventTarget
 
+instance EventTargetOp Co.Comment where
+  toEventTarget = Co.toEventTarget
+
 instance EventTargetOp Document where
   toEventTarget = D.toEventTarget
 
@@ -146,6 +152,9 @@ instance EventTargetOp HD.HTMLDocument where
 
 instance EventTargetOp HE.HTMLElement where
   toEventTarget = HE.toEventTarget
+
+instance EventTargetOp P.ProcessingInstruction where
+  toEventTarget = P.toEventTarget
 
 instance EventTargetOp Text where
   toEventTarget = T.toEventTarget
@@ -184,6 +193,9 @@ instance EventTargetOp HDE.HTMLDataElement where
 
 instance EventTargetOp HDa.HTMLDataListElement where
   toEventTarget = HDa.toEventTarget
+
+instance EventTargetOp HDia.HTMLDialogElement where
+  toEventTarget = HDia.toEventTarget
 
 instance EventTargetOp HDv.HTMLDivElement where
   toEventTarget = HDv.toEventTarget
