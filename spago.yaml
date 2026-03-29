@@ -24,7 +24,7 @@ package:
     - web-html: ">=4.1.1 <5.0.0"
   name: web-chain
   publish:
-    version: 1.0.0
+    version: 1.0.1
     license: MIT
     # Optional list of globs to include in the published archive, in
     # addition to the list of files that the Registry includes by default:
