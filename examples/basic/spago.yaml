@@ -1,0 +1,7 @@
+package:
+  dependencies:
+    - debug
+    - console
+    - effect
+    - web-chain
+  name: basic

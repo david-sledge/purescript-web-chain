@@ -1,0 +1,4 @@
+package:
+  dependencies:
+  - web-chain
+  name: b4-unload-event

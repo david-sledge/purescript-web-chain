@@ -1,0 +1,6 @@
+package:
+  name: tab-panes
+  dependencies:
+  - formatters
+  - prelude
+  - web-chain
