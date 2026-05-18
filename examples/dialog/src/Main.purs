@@ -12,7 +12,7 @@ import Effect.Console (log)
 import Effect.Exception (error, throwException)
 import Web.Chain.DOM (doc, el, eln, nd, ndM, txn, (+<))
 import Web.Chain.Event (onReady_)
-import Web.Chain.HTML (button)
+import Web.Chain.HTML (buttonN, divN)
 import Web.HTML.HTMLDialogElement (HTMLDialogElement, fromElement, open, showModal)
 import Web.HTML.HTMLDocument (body)
 
@@ -39,7 +39,7 @@ main = onReady_ $ \_ →
                       , eln "option" [] [ txn "Spider monkey" ]
                       ]
                   ]
-              , eln "div" []
+              , divN []
                   [ eln "button" [ "type" /\ "reset" ] [ txn "Cancel" ]
                   , eln "button" [ "type" /\ "submit" ] [ txn "Confirm" ]
                   ]
@@ -48,13 +48,12 @@ main = onReady_ $ \_ →
         dialog ← maybe (liftEffect <<< throwException $ error "Issue with dialog") pure mDialog
         _ ← bodyElem +<
           [ nd dialog
-          , eln "div" []
-              [ button [] [ txn "Update details" ]
+          , divN []
+              [ buttonN [] [ txn "Update details" ]
                   ( Just $ const \_ → do
                       showModal dialog
                       openCheck dialog
                   )
-                  # ndM
               ]
           ]
         pure unit

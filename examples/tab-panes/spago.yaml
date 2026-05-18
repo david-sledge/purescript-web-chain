@@ -4,3 +4,4 @@ package:
   - formatters
   - prelude
   - web-chain
+  - now

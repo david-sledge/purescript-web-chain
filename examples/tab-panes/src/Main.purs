@@ -16,7 +16,7 @@ import Effect.Exception (error, throwException)
 import Effect.Now (now)
 import Web.Chain.DOM (doc, eln, nd, ndM, txn, (+<))
 import Web.Chain.Event (onChange, onReady_)
-import Web.Chain.HTML (checkbox)
+import Web.Chain.HTML (checkbox, divN)
 import Web.Chain.UI.UITabPane (mkTabPanes, nullTabPaneClassNames)
 import Web.HTML.HTMLDocument (body)
 import Web.HTML.HTMLInputElement (checked)
@@ -47,10 +47,10 @@ main = onReady_ $ \_ → do
             , panes = [ "tab-pane" ]
             }
         _ ← bodyElem +<
-          [ eln "div" [ "class" /\ "container-fluid" ]
-              [ eln "div" [ "class" /\ "card" ]
-                  [ eln "div" [ "class" /\ "card-header" ] [ txn "Tab Panes" ]
-                  , eln "div" [ "class" /\ "card-body" ] [ nd elem, nd divElem ]
+          [ divN [ "class" /\ "container-fluid" ]
+              [ divN [ "class" /\ "card" ]
+                  [ divN [ "class" /\ "card-header" ] [ txn "Tab Panes" ]
+                  , divN [ "class" /\ "card-body" ] [ nd elem, nd divElem ]
                   ]
               ]
           ]

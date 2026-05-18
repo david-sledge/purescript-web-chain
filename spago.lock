@@ -1,67 +1,129 @@
 {
   "workspace": {
     "packages": {
+      "b4-unload-event": {
+        "path": "examples/b4-unload-event",
+        "core": {
+          "dependencies": [
+            "web-chain"
+          ]
+        },
+        "test": {
+          "dependencies": []
+        }
+      },
+      "basic": {
+        "path": "examples/basic",
+        "core": {
+          "dependencies": [
+            "console",
+            "debug",
+            "effect",
+            "web-chain"
+          ]
+        },
+        "test": {
+          "dependencies": []
+        }
+      },
+      "dialog": {
+        "path": "examples/dialog",
+        "core": {
+          "dependencies": [
+            "console",
+            "effect",
+            "web-chain"
+          ]
+        },
+        "test": {
+          "dependencies": []
+        }
+      },
+      "event-handling": {
+        "path": "examples/event-handling",
+        "core": {
+          "dependencies": [
+            "console",
+            "debug",
+            "effect",
+            "web-chain"
+          ]
+        },
+        "test": {
+          "dependencies": []
+        }
+      },
+      "sortable-table": {
+        "path": "examples/sortable-table",
+        "core": {
+          "dependencies": [
+            "arrays",
+            "console",
+            "datetime",
+            "debug",
+            "effect",
+            "either",
+            "exceptions",
+            "foldable-traversable",
+            "formatters",
+            "integers",
+            "lists",
+            "maybe",
+            "now",
+            "numbers",
+            "prelude",
+            "tuples",
+            "unordered-collections",
+            "unsafe-coerce",
+            "unsafe-reference",
+            "web-chain",
+            "web-cssom",
+            "web-dom",
+            "web-events",
+            "web-html"
+          ]
+        },
+        "test": {
+          "dependencies": []
+        }
+      },
+      "tab-panes": {
+        "path": "examples/tab-panes",
+        "core": {
+          "dependencies": [
+            "formatters",
+            "now",
+            "prelude",
+            "web-chain"
+          ]
+        },
+        "test": {
+          "dependencies": []
+        }
+      },
       "web-chain": {
         "path": "./",
         "core": {
           "dependencies": [
-            {
-              "arrays": ">=7.3.0 <8.0.0"
-            },
-            {
-              "effect": ">=4.0.0 <5.0.0"
-            },
-            {
-              "either": ">=6.1.0 <7.0.0"
-            },
-            {
-              "exceptions": ">=6.1.0 <7.0.0"
-            },
-            {
-              "foldable-traversable": ">=6.0.0 <7.0.0"
-            },
-            {
-              "integers": ">=6.0.0 <7.0.0"
-            },
-            {
-              "lists": ">=7.0.0 <8.0.0"
-            },
-            {
-              "maybe": ">=6.0.0 <7.0.0"
-            },
-            {
-              "numbers": ">=9.0.1 <10.0.0"
-            },
-            {
-              "prelude": ">=6.0.2 <7.0.0"
-            },
-            {
-              "st": ">=6.2.0 <7.0.0"
-            },
-            {
-              "tuples": ">=7.0.0 <8.0.0"
-            },
-            {
-              "unordered-collections": ">=3.1.0 <4.0.0"
-            },
-            {
-              "unsafe-coerce": ">=6.0.0 <7.0.0"
-            },
-            {
-              "unsafe-reference": ">=5.0.0 <6.0.0"
-            },
-            {
-              "web-cssom": ">=2.0.0 <3.0.0"
-            },
-            {
-              "web-dom": ">=6.0.0 <7.0.0"
-            },
-            {
-              "web-events": ">=4.0.0 <5.0.0"
-            },
-            {
-              "web-html": ">=4.1.1 <5.0.0"
-            }
+            "arrays",
+            "effect",
+            "either",
+            "exceptions",
+            "foldable-traversable",
+            "integers",
+            "lists",
+            "maybe",
+            "numbers",
+            "prelude",
+            "st",
+            "tuples",
+            "unordered-collections",
+            "unsafe-coerce",
+            "unsafe-reference",
+            "web-cssom",
+            "web-dom",
+            "web-events",
+            "web-html"
           ]
         },
         "test": {
@@ -71,7 +133,7 @@
     },
     "package_set": {
       "address": {
-        "registry": "75.2.1"
+        "registry": "77.2.0"
       },
       "compiler": ">=0.15.15 <0.16.0",
       "content": {
@@ -109,7 +171,7 @@
         "assert-multiple": "0.4.0",
         "avar": "5.0.1",
         "axon": "0.0.3",
-        "b64": "0.0.8",
+        "b64": "0.0.9",
         "barbies": "1.0.1",
         "barlow-lens": "0.9.0",
         "benchlib": "0.0.4",
@@ -189,7 +251,7 @@
         "elmish-testing-library": "0.3.2",
         "elmish-time-machine": "0.4.2",
         "email-validate": "7.0.0",
-        "encoding": "0.0.9",
+        "encoding": "0.0.10",
         "enums": "6.0.1",
         "env-names": "0.4.0",
         "environment": "2.0.0",
@@ -282,19 +344,19 @@
         "humdrum": "0.0.1",
         "hylograph-canvas": "0.1.0",
         "hylograph-d3-kernel": "0.1.0",
-        "hylograph-graph": "0.2.0",
-        "hylograph-layout": "0.2.1",
-        "hylograph-music": "0.2.0",
+        "hylograph-graph": "0.3.0",
+        "hylograph-layout": "0.3.0",
+        "hylograph-music": "0.4.0",
         "hylograph-optics": "0.1.0",
-        "hylograph-selection": "0.3.4",
-        "hylograph-simulation": "0.3.0",
+        "hylograph-selection": "0.5.1",
+        "hylograph-simulation": "0.5.0",
         "hylograph-simulation-core": "0.1.0",
-        "hylograph-simulation-halogen": "0.3.0",
+        "hylograph-simulation-halogen": "0.5.0",
         "hylograph-transitions": "0.1.0",
         "hylograph-wasm-kernel": "0.1.0",
         "hyrule": "2.3.8",
         "i18next": "0.1.0",
-        "idb": "0.1.0",
+        "idb": "0.2.0",
         "identity": "6.0.0",
         "identy": "4.0.1",
         "indexed-db": "1.0.0",
@@ -320,10 +382,11 @@
         "js-maps": "0.1.2",
         "js-promise": "1.0.0",
         "js-promise-aff": "1.0.0",
-        "js-temporal": "2.1.0",
+        "js-temporal": "3.0.0",
         "js-timers": "6.1.0",
         "js-uri": "3.1.0",
         "jsdom": "1.0.0",
+        "jsinc": "0.5.1",
         "json": "1.1.0",
         "json-codecs": "5.0.0",
         "justifill": "0.5.0",
@@ -456,6 +519,7 @@
         "profunctor-lenses": "8.0.0",
         "prospero": "0.1.0",
         "protobuf": "4.4.0",
+        "ps-spa": "0.5.3",
         "psa-utils": "8.0.0",
         "psci-support": "6.0.0",
         "punycode": "1.0.0",
@@ -477,7 +541,7 @@
         "react-basic-dom": "7.0.0",
         "react-basic-dom-beta": "0.1.1",
         "react-basic-emotion": "7.1.0",
-        "react-basic-hooks": "9.0.0",
+        "react-basic-hooks": "9.1.1",
         "react-basic-storybook": "2.0.0",
         "react-dnd-kit": "0.6.0",
         "react-dom": "8.0.0",
@@ -519,7 +583,7 @@
         "semirings": "7.0.0",
         "shuffle": "2.0.0",
         "sigil": "0.3.0",
-        "sigil-hats": "0.2.0",
+        "sigil-hats": "0.3.0",
         "signal": "13.0.0",
         "simple-emitter": "3.0.1",
         "simple-i18n": "2.0.1",
@@ -533,7 +597,7 @@
         "soundfonts": "4.1.0",
         "sparse-matrices": "2.0.1",
         "sparse-polynomials": "3.0.1",
-        "spec": "8.1.1",
+        "spec": "8.1.2",
         "spec-discovery": "8.4.1",
         "spec-mocha": "5.1.1",
         "spec-node": "0.0.3",
@@ -547,15 +611,16 @@
         "string-parsers": "8.0.0",
         "strings": "6.0.1",
         "strings-extra": "4.0.0",
-        "stringutils": "0.0.12",
+        "stringutils": "0.0.13",
         "structured-logging": "1.0.0",
         "substitute": "0.2.3",
+        "supabase": "0.1.0",
         "supply": "0.2.0",
         "svg-parser": "3.0.0",
         "systemd-journald": "0.3.0",
         "tagged": "4.0.2",
         "tailrec": "6.1.0",
-        "tanstack-query": "2.0.1",
+        "tanstack-query": "3.0.0",
         "tecton": "0.2.1",
         "tecton-halogen": "0.2.0",
         "temporal": "0.1.0",
@@ -614,6 +679,7 @@
         "versions": "7.0.0",
         "visx": "0.0.2",
         "vitest": "2.0.0",
+        "web-chain": "1.0.1",
         "web-clipboard": "6.0.0",
         "web-cssom": "2.0.0",
         "web-cssom-view": "0.1.0",
@@ -681,11 +747,11 @@
         "yoga-json": "5.2.1",
         "yoga-language": "1.0.0",
         "yoga-next-fastify": "0.1.1",
-        "yoga-om": "2.0.0",
-        "yoga-om-layer": "2.0.0",
+        "yoga-om": "2.2.0",
+        "yoga-om-layer": "2.1.0",
         "yoga-om-strom": "0.4.2",
         "yoga-om-workerbees": "0.1.2",
-        "yoga-opentelemetry": "0.1.1",
+        "yoga-opentelemetry": "0.2.0",
         "yoga-options": "0.1.1",
         "yoga-pino": "0.1.1",
         "yoga-postgres": "6.0.0",
@@ -696,7 +762,7 @@
         "yoga-redis": "0.1.0",
         "yoga-shadcn": "1.0.5",
         "yoga-sql-types": "0.1.0",
-        "yoga-sqlite": "0.3.0",
+        "yoga-sqlite": "0.3.2",
         "yoga-sse": "0.1.1",
         "yoga-subtlecrypto": "0.1.0",
         "yoga-test-docker": "0.1.2",
@@ -742,6 +808,15 @@
         "newtype",
         "prelude",
         "tuples"
+      ]
+    },
+    "console": {
+      "type": "registry",
+      "version": "6.1.0",
+      "integrity": "sha256-3T5PPz1mATZmV0C4GzkCkpLlCa5xG7u8ZNgnLrrrI1Q=",
+      "dependencies": [
+        "effect",
+        "prelude"
       ]
     },
     "const": {
@@ -796,6 +871,15 @@
         "partial",
         "prelude",
         "tuples"
+      ]
+    },
+    "debug": {
+      "type": "registry",
+      "version": "6.0.2",
+      "integrity": "sha256-d/EzRm/J2JyzvlIeo2Ex78Y7HRB0IXBitnVJywL4gHk=",
+      "dependencies": [
+        "functions",
+        "prelude"
       ]
     },
     "distributive": {
@@ -897,6 +981,32 @@
         "strings",
         "transformers",
         "unsafe-coerce"
+      ]
+    },
+    "formatters": {
+      "type": "registry",
+      "version": "7.0.0",
+      "integrity": "sha256-ViGY8XoXmPFDPnuFHfgJzq8+UJshr8erfDOcY6fofRk=",
+      "dependencies": [
+        "arrays",
+        "bifunctors",
+        "control",
+        "datetime",
+        "either",
+        "enums",
+        "foldable-traversable",
+        "integers",
+        "lists",
+        "maybe",
+        "newtype",
+        "numbers",
+        "ordered-collections",
+        "parsing",
+        "partial",
+        "prelude",
+        "strings",
+        "transformers",
+        "tuples"
       ]
     },
     "functions": {
@@ -1061,6 +1171,16 @@
         "unfoldable"
       ]
     },
+    "now": {
+      "type": "registry",
+      "version": "6.0.0",
+      "integrity": "sha256-mTyG4s8tps3XIf0jjV/lME2/QlwMzrQly2wqfSSUM3o=",
+      "dependencies": [
+        "datetime",
+        "effect",
+        "prelude"
+      ]
+    },
     "nullable": {
       "type": "registry",
       "version": "6.0.0",
@@ -1109,6 +1229,38 @@
       "dependencies": [
         "newtype",
         "prelude"
+      ]
+    },
+    "parsing": {
+      "type": "registry",
+      "version": "11.0.0",
+      "integrity": "sha256-N88gb/XbM29vw/Uop83shuMFT4wieQCz4wlQAct5eMs=",
+      "dependencies": [
+        "arrays",
+        "control",
+        "effect",
+        "either",
+        "enums",
+        "foldable-traversable",
+        "functions",
+        "identity",
+        "integers",
+        "lazy",
+        "lists",
+        "maybe",
+        "newtype",
+        "nullable",
+        "numbers",
+        "partial",
+        "prelude",
+        "st",
+        "strings",
+        "tailrec",
+        "transformers",
+        "tuples",
+        "unfoldable",
+        "unicode",
+        "unsafe-coerce"
       ]
     },
     "partial": {
@@ -1272,6 +1424,21 @@
         "partial",
         "prelude",
         "tuples"
+      ]
+    },
+    "unicode": {
+      "type": "registry",
+      "version": "6.0.0",
+      "integrity": "sha256-5KugCNyYxscmZpnMbssOQA96XimuBN/bjHpdrtd5qaY=",
+      "dependencies": [
+        "arrays",
+        "enums",
+        "integers",
+        "maybe",
+        "partial",
+        "prelude",
+        "strings",
+        "unsafe-coerce"
       ]
     },
     "unordered-collections": {

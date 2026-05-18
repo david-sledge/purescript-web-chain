@@ -2,28 +2,46 @@
 module Web.Chain.HTML
   ( SelectContent(..)
   , button
+  , buttonN
   , check
   , checkbox
+  , checkboxN
   , div
+  , divN
   , docBody
   , maxLen
   , minLen
   , numberField
+  , numberFieldN
   , passwordField
+  , passwordFieldN
   , setAutocomplete
   , setLenLimits
   , singleSelect
+  , singleSelectN
   , span
+  , spanN
   , table
+  , tableN
+  , tbody
+  , tbodyN
   , td
+  , tdN
   , textField
+  , textFieldN
+  , tfoot
+  , tfootN
   , th
+  , thN
+  , thead
+  , theadN
   , tr
+  , trN
   , uncheck
   )
   where
 
-import Prelude
+import Prelude hiding (div)
 
 import Data.Array (snoc)
 import Data.Either (Either(Left, Right), either)
@@ -37,7 +55,7 @@ import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (error, throwException)
-import Web.Chain.DOM (attrM, doc, el, eln, setAttrsM, txn)
+import Web.Chain.DOM (attrM, doc, el, eln, ndM, setAttrsM, txn)
 import Web.Chain.HTML.Util (testCoercion)
 import Web.DOM (Node)
 import Web.DOM.Class.ElementOp (class ElementOp)
@@ -53,6 +71,7 @@ import Web.HTML.HTMLSpanElement as HSp
 import Web.HTML.HTMLTableCellElement as HTD
 import Web.HTML.HTMLTableElement as HT
 import Web.HTML.HTMLTableRowElement as HTR
+import Web.HTML.HTMLTableSectionElement as HTS
 import Web.HTML.Lifted.HTMLDocument (body, setBody)
 
 -- | Create a plain ol' input field of type text with a default value.
@@ -60,6 +79,9 @@ textField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) →
 textField attrs defaultValue =
   (el "input" attrs [] # setAttrsM [ "type" /\ "text", "value" /\ defaultValue ])
     >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
+
+textFieldN ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → String → m Node
+textFieldN = compose ndM <<< textField
 
 {-
 text field functions:
@@ -124,11 +146,17 @@ numberField attrs mDefaultValue =
   (el "input" attrs [] # setAttrsM [ "type" /\ "number", "value" /\ (maybe "" show mDefaultValue) ])
     >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
 
+numberFieldN ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Maybe Number → m Node
+numberFieldN = compose ndM <<< numberField
+
 -- | Create a password text field.
 passwordField ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → m HTMLInputElement
 passwordField attrs =
   (el "input" attrs [] # setAttrsM [ "type" /\ "password" ])
     >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
+
+passwordFieldN ∷ ∀ m f. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → m Node
+passwordFieldN = ndM <<< passwordField
 
 -- | Create a button.
 button ∷ ∀ m f1 f2 a. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → Maybe (HTMLButtonElement → Event → Effect a) → m HTMLButtonElement
@@ -137,35 +165,80 @@ button attributes childNodesM mClick = do
     testCoercion "button" "HTMLButtonElement" <<< HBu.fromElement
   btn # maybe pure (on "click" <<< (#) btn) mClick
 
+buttonN ∷ ∀ m f1 f2 a. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → Maybe (HTMLButtonElement → Event → Effect a) → m Node
+buttonN = compose (compose ndM) <<< button
+
 div ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HD.HTMLDivElement
 div attributes children =
   el "div" attributes children >>=
     testCoercion "div" "HTMLDivElement" <<< HD.fromElement
+
+divN ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m Node
+divN = compose ndM <<< div
 
 span ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HSp.HTMLSpanElement
 span attributes children =
   el "span" attributes children >>=
     testCoercion "span" "HTMLSpanElement" <<< HSp.fromElement
 
+spanN ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m Node
+spanN = compose ndM <<< span
+
 tr ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTR.HTMLTableRowElement
 tr attributes children =
   el "tr" attributes children >>=
     testCoercion "tr" "HTMLTableRowElement" <<< HTR.fromElement
+
+trN ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m Node
+trN = compose ndM <<< tr
 
 td ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTD.HTMLTableCellElement
 td attributes children =
   el "td" attributes children >>=
     testCoercion "td" "HTMLTableCellElement" <<< HTD.fromElement
 
+tdN ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m Node
+tdN = compose ndM <<< td
+
 th ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTD.HTMLTableCellElement
 th attributes children =
   el "th" attributes children >>=
     testCoercion "th" "HTMLTableCellElement" <<< HTD.fromElement
 
+thN ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m Node
+thN = compose ndM <<< th
+
+thead ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTS.HTMLTableSectionElement
+thead attributes children =
+  el "thead" attributes children >>=
+    testCoercion "thead" "HTMLTableSectionElement" <<< HTS.fromElement
+
+theadN ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m Node
+theadN = compose ndM <<< thead
+
+tbody ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTS.HTMLTableSectionElement
+tbody attributes children =
+  el "tbody" attributes children >>=
+    testCoercion "tbody" "HTMLTableSectionElement" <<< HTS.fromElement
+
+tbodyN ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m Node
+tbodyN = compose ndM <<< tbody
+
+tfoot ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HTS.HTMLTableSectionElement
+tfoot attributes children =
+  el "tfoot" attributes children >>=
+    testCoercion "tfoot" "HTMLTableSectionElement" <<< HTS.fromElement
+
+tfootN ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m Node
+tfootN = compose ndM <<< tfoot
+
 table ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m HT.HTMLTableElement
 table attributes children =
   el "table" attributes children >>=
     testCoercion "table" "HTMLTableElement" <<< HT.fromElement
+
+tableN ∷ ∀ m f1 f2. MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒ f1 (String /\ String) → f2 (m Node) → m Node
+tableN = compose ndM <<< table
 
 check ∷ ∀ m. MonadEffect m ⇒ HTMLInputElement → m HTMLInputElement
 check checkbx = do
@@ -184,6 +257,9 @@ checkbox attributes isChecked mChange = do
     >>= testCoercion "input" "HTMLInputElement" <<< HIn.fromElement
     >>= if isChecked then check else uncheck
   chk # maybe pure (on "change" <<< (#) chk) mChange # setAttrsM [ "type" /\ "checkbox" ]
+
+checkboxN ∷ ∀ m f a. MonadEffect m ⇒ Foldable f ⇒ f (String /\ String) → Boolean → Maybe (HTMLInputElement → Event → Effect a) → m Node
+checkboxN = compose (compose ndM) <<< checkbox
 
 data SelectContent
   = Option String String
@@ -217,6 +293,11 @@ singleSelect attributes content mInitial =
   )
   >>= el "select" attributes
   >>= testCoercion "select" "HTMLSelectElement" <<< HSe.fromElement
+
+singleSelectN ∷ ∀ m f1 f2.
+  MonadEffect m ⇒ Foldable f1 ⇒ Foldable f2 ⇒
+  f1 (String /\ String) → f2 (SelectContent) → Maybe String → m Node
+singleSelectN = compose (compose ndM) <<< singleSelect
 
 docBody ∷ ∀ m. MonadEffect m ⇒ m HBo.HTMLBodyElement
 docBody = do
